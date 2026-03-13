@@ -2,7 +2,6 @@ const translate = {
 	// 角色翻译
 	th_sunwukong: "孙悟空",
 	dqzw_linzhengying: "林正英",
-	"燕双鹰": "燕双鹰",
 	cxyChenHe: "曾小贤",
 	cxyChuYunFei: "楚云飞",
 	dxjtz_jiagui: "贾贵",
@@ -14,8 +13,6 @@ const translate = {
 	hyxc_liyunlong: "李云龙",
 	hyxc_linzhiqiang: "林志强",
 	weixiaobao: "韦小宝",
-	"李寻欢": "李寻欢",
-	"毒刘备": "毒刘备",
 
 	// 技能翻译
 	// 孙悟空技能
@@ -60,18 +57,17 @@ const translate = {
 	dutang233: "毒汤",
 	dutang233_info: "其他角色的准备阶段开始时，你可以获得1个暴露标记并查看牌堆顶的五张牌，选择1张牌替换为'毒'。该角色与你本回合不能【赠毒】。",
 	liuxue: "流血",
+
 	// 刘华强技能翻译
 	bigdao: "大刀",
 	"bigdao_info": "当你使用【杀】指定一个目标后，该角色获得一枚“流血”标记。当一张牌被使用并结算完毕后，拥有“流血”标记的角色依次失去X点体力            （X为其拥有的流血标记数）",
 	liuxue: "流血",
 	yingbian: "应变",
 	"yingbian_info": "锁定技，转换技，当你受到伤害时，若你没有  阳：【杀】/阴：【闪】，你可以弃置所有手牌并摸等量的牌。            若如此做，防止此伤害",
-	dianlu: "电驴",
-	"dianlu_info": "锁定技，你的坐骑牌视为【酒】；你计算与其他角色距离-2",
-
+	dianlv: "电驴",
+	"dianlv_info": "锁定技，你的坐骑牌视为【酒】；你计算与其他角色距离-2",
 	yidao228: "一刀",
 	yidao228_info: "你的【杀】无法被闪避。你的杀造成的伤害+1。",
-
 	zhaocha3399: "找茬",
 	zhaocha3399_info: "出牌阶段限一次，你可以交给一名其他角色一张手牌，然后其选择一项：1. 交给你一张点数>K的手牌；2. 弃置所有手牌，其受到的下一次伤害+1。",
 	zhaocha3400: "找茬",

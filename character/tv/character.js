@@ -61,7 +61,7 @@ const character = {
 		sex: "male",
 		group: "shu",
 		hp: 3,
-		skills: ["bigdao", "yingbian", "dianlu", "yidao228", "zhaocha3399"],
+		skills: ["bigdao", "yingbian", "dianlv", "yidao228", "zhaocha3399"],
 	},
 
 	// 穿山甲
@@ -69,7 +69,7 @@ const character = {
 		sex: "male",
 		group: "qun",
 		hp: "7/8",
-		skills: ["dpoioned", "doubleagent", "selfbang", "csj_dutang", "csj_zhending", "csj_baolu"],
+		skills: ["dpoioned", "doubleagent", "selfbang", "dutang233","qianfu233", "csj_zhending", "csj_baolu"],
 		tags: ["des:重庆军统，和小日本双料搬山道士，代号“穿山甲”，化名老冯，作为炊事员潜伏在新四军中，被王大队长和谢司令当场识破，喝下自己烧的毒鸡汤而结束了罪恶的一生。"],
 	},
 

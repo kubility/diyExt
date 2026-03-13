@@ -187,9 +187,9 @@ const skill = {
 				},
 				content: async function (event, trigger, player) {
 					if (trigger.name === 'phaseZhunbei') {
-						player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/net/lyg_jiefei2.jpg');
+						player.node.avatar.setBackgroundImage(lib.assetURL + '/image/character/net/lyg_jiefei2.jpg');
 					} else {
-						player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/net/lyg_jiefei.jpg');
+						player.node.avatar.setBackgroundImage(lib.assetURL + '/image/character/net/lyg_jiefei.jpg');
 					}
 				}
 			},

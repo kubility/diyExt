@@ -115,7 +115,7 @@ const skill = {
 		content: function () {
 			player.maxHp = player.maxHp * 2;
 			player.recover(3);
-			player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/other/zhuanyelvshi2.jpg');
+			player.node.avatar.setBackgroundImage(lib.assetURL + '/image/character/other/zhuanyelvshi2.jpg');
 			player.addSkill('审判');
 			player.awakenSkill('觉醒');
 		},
@@ -259,9 +259,32 @@ const skill = {
 			}
 
 			ui.backgroundMusic.pause();
-			event.gif = ui.create.div('.yldb-background');
+			// 创建 GIF 元素
+			event.gif = document.createElement('div');
+			event.gif.className = 'yldb-background';
+			event.gif.style.cssText = `
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 9999;
+				background: url(extension/搬山道士/image/character/other/yldb_pojun.gif) no-repeat center center;
+				background-size: cover;
+			`;
+
+			// 添加到页面
+			const targetElement = ui.window || document.body;
+			if (targetElement) {
+				document.body.insertBefore(event.gif, targetElement);
+			} else {
+				document.body.appendChild(event.gif);
+			}
+			/* event.gif = ui.create.div('.yldb-background');
 			event.gif.setBackgroundImage('extension/搬山道士/image/character/other/yldb_pojun.gif');
 			document.body.insertBefore(event.gif, ui.window);
+			*/
+
 			game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'yldb_pojun');
 			await new Promise(resolve => {
 				game.delay(0, 15000);
