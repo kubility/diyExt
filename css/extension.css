@@ -1,0 +1,10 @@
+.yldb-background{
+    position: absolute;
+    background-size: cover;
+    top: 50%;
+    left: 50%;
+    display: block;
+    min-width: 100%;
+    min-height: 100%;
+    transform:translate(-50%,-50%);
+}
