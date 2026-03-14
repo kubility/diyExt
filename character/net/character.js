@@ -16,6 +16,12 @@ const character = {
 		hp: 4,
 		skills: ["lyg_yinxiang", "lyg_yaoqiang", "lyg_saodang", "qiangjie65", "zhanlan659", "pofang224"],
 	},
+	qun_bujingyun: {
+		sex: "male",
+		group: "qun",
+		hp: 4,
+		skills: ["qun_dont_come", "qun_kirin_arm", "qun_sword_curse"],
+	},
 
 };
 for (let i in character) {

@@ -296,6 +296,216 @@ const skill = {
 			}
 		},
 	},
+	
+	// 步惊云 - 你不要过来啊！
+	qun_dont_come: {
+		audio: "ext:搬山道士/audio/skill:2",
+		trigger: { target: "useCardToBefore" },
+		forced: true,
+		filter: function (event, player) {
+			if (!event.targets || !event.targets.includes(player)) return false;
+			if (event.player == player) return false;
+			return true;
+		},
+		content: async function (event, trigger, player) {
+			player.say('你不要过来啊！');
+			game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', '你不要过来啊');
+			const judge = await player.judge();
+			const suit = judge.suit;
+			const target = trigger.player;
+
+			if (suit === 'heart') {
+				game.log(target, '被迫选择其他目标...');
+				if (event.targets.length === 1) {
+					const newTarget = await target.chooseTarget('选择一个新目标', (card, player, target) => {
+						return target != player && lib.filter.filterTarget.apply(this, [card, player, target]);
+					}).forResult();
+					if (newTarget.bool && newTarget.targets.length > 0) {
+						event.targets = newTarget.targets;
+					} else {
+						event.cancel();
+					}
+				} else {
+					event.cancel();
+				}
+
+			} else if (suit === 'diamond') {
+				const drawnCards = await player.draw(1);
+				player.say('好可怕，我挡！');
+				if (drawnCards && drawnCards.length > 0) {
+					await player.showCards(drawnCards);
+				}
+			} else if (suit === 'spade') {
+				await player.damage(1);
+				if (target.countCards('h') > 0) {
+					await target.discard(1);
+				}
+			} else {
+				await player.draw(1);
+				await target.draw(1);
+				player.say('三分归元气！');
+				target.say('三分归元气！');
+			}
+		},
+		ai: {
+			effect: {
+				target: function (card, player, target) {
+					if (player.hasSkill('qun_dont_come')) {
+						return [0.5, 0.5];
+					}
+				},
+			},
+		},
+	},
+ 
+	// 步惊云 - 麒麟臂乱甩
+	qun_kirin_arm: {
+		audio: "ext:搬山道士/audio/skill:3",
+		enable: "phaseUse",
+		usable: 1,
+		filter: function (event, player) {
+			return player.countCards('h') > 0;
+		},
+		filterTarget: function (card, player, target) {
+			return target != player && target.countCards('h') > 0;
+		},
+		selectTarget: 1,
+		content: async function (event, trigger, player) {
+			const target = event.targets[0];
+			const playerDiscard = await player.chooseCard('h', true, '选择一张手牌进行麒麟臂乱甩').forResult();
+			if (!playerDiscard.bool) return;
+
+			const targetDiscard = await target.chooseCard('h', true, '选择一张手牌进行麒麟臂乱甩').forResult();
+			if (!targetDiscard.bool) return;
+
+			const playerCard = playerDiscard.cards[0];
+			const targetCard = targetDiscard.cards[0];
+
+			await player.discard(playerCard);
+			await target.discard(targetCard);
+
+			const playerNum = get.number(playerCard);
+			const targetNum = get.number(targetCard);
+			if (playerNum > targetNum) {
+				await target.damage(1);
+				player.say('麒麟臂，发作了！');
+			} else if (playerNum < targetNum) {
+				await player.damage(1);
+				player.say('我的麒麟臂啊！');
+			} else {
+				await player.draw(2);
+				await target.draw(2);
+				player.say('风云合璧，摩柯无量！');
+				target.say('风云合璧，摩柯无量！');
+			}
+		},
+		ai: {
+			order: 6,
+			result: {
+				target: function (player, target) {
+					return -1;
+				},
+				player: function (player, target) {
+					return 1;
+				},
+			},
+		},
+	},
+
+	// 步惊云 - 绝世好剑
+	qun_sword_curse: {
+		audio: "ext:搬山道士/audio/skill:2",
+		trigger: {
+			player: "useCardAfter",
+		},
+		forced: true,
+		mark: true,
+		marktext: "⚔",
+		intro: {
+			name: "剑",
+			content: function (storage, player) {
+				if (player.countMark('qun_sword_curse') === 1) {
+					return '好剑';
+				} else if (player.countMark('qun_sword_curse') === 2) {
+					return '好贱';
+				} else {
+					return '郝建';
+				}
+			},
+		},
+		filter: function (event, player) {
+			if (!event.card) {
+				return false;
+			}
+			return event.card &&
+				get.type(event.card) === 'equip' &&
+				get.subtype(event.card) === 'equip1';
+		},
+		content: async function (event, trigger, player) {
+			const judge = await player.judge();
+			const suit = judge.suit;
+			const weapon = player.getEquip(1);
+
+			if (suit === 'heart') {
+				player.say('绝世好剑，归我了！');
+				player.addTempSkill('qun_sword_curse_boost', { player: 'phaseEnd' });
+				player.addMark('qun_sword_curse', 1);
+
+			} else if (suit === 'diamond') {
+				if (player.countCards('h') > 0) {
+					await player.discard(1);
+					player.say('绝世好剑，好剑啊！');
+				}
+			} else if (suit === 'spade') {
+				await player.draw(2);
+				player.say('绝世好剑，怎么这样！');
+				player.addTempSkill('qun_sword_curse_weak', { player: 'phaseEnd' });
+				player.addMark('qun_sword_curse', 2);
+			} else {
+				if (weapon) {
+					await player.discard(weapon);
+					player.say('我的绝世好剑啊！');
+				}
+			}
+		},
+		subSkill: {
+			boost: {
+				charlotte: true,
+				mod: {
+					cardUsable: function (card, player, num) {
+						if (card.name === 'sha') {
+							return Infinity;  // 杀可以无限使用
+						}
+						return num;
+					},
+					attackRange: function (player, num) {
+						return num + 3;  // 攻击范围+1
+					},
+					selectTarget: function (card, player, range) {
+						return range + 2;
+					},
+				},
+			},
+			weak: {
+				charlotte: true,
+				mod: {
+					attackRange: function (player, num) {
+						return 0;  // 攻击范围-1
+					},
+				},
+			},
+		},
+		ai: {
+			effect: {
+				target: function (card, player, target) {
+					if (get.type(card) === 'equip' && get.subtype(card) === 'equip1') {
+						return [0.5, 0.5];
+					}
+				},
+			},
+		},
+	},
+
 };
 
 export default skill;

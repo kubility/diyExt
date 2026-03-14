@@ -32,19 +32,19 @@ export async function precontent(config, pack) {
 
 	// 加载电视剧/影视角色分组
 	if (lib.config.extension_搬山道士_tv) {
-		await loadPack("tv", "影视大鬼畜", ["character"]);
+		await loadPack("tv", "影鬼", ["character"]);
 		console.log("影视角色分组加载完成");
 	}
 
 	// 加载网络梗角色分组
 	if (lib.config.extension_搬山道士_net) {
-		await loadPack("net", "网络大鬼畜", ["character"]);
+		await loadPack("net", "网鬼", ["character"]);
 		console.log("网络梗角色分组加载完成");
 	}
 
 	// 加载另类角色分组
 	if (lib.config.extension_搬山道士_other) {
-		await loadPack("other", "其他大鬼畜", ["character"]);
+		await loadPack("other", "其他鬼畜", ["character"]);
 		console.log("另类角色分组加载完成");
 	}
 

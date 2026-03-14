@@ -21,21 +21,21 @@ const config = {
 
 	// 电视剧/影视角色分组
 	tv: {
-		name: "影视大鬼畜",
+		name: "影鬼",
 		init: true,
-		intro: "电视剧和影视相关角色",
+		intro: "影视剧大鬼畜系列",
 	},
 
 	// 网络梗角色分组
 	net: {
-		name: "网络大鬼畜",
+		name: "网鬼",
 		init: true,
-		intro: "网络流行梗相关角色",
+		intro: "网络流行梗大鬼畜系列",
 	},
 
 	// 另类角色分组
 	other: {
-		name: "其他大鬼畜",
+		name: "其他鬼",
 		init: true,
 		intro: "其他类型的角色",
 	},
