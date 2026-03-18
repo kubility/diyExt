@@ -23,6 +23,13 @@ const character = {
 		skills: ["qun_dont_come", "qun_kirin_arm", "qun_sword_curse"],
 	},
 
+	// 唐纳德·特朗普
+	qun_trump: {
+		sex: "male",
+		group: "qun",
+		hp: 4,
+		skills: ["qun_moyin", "qun_jianqiang", "qun_fuguo", "qun_tuite"],
+	},
 };
 for (let i in character) {
 	character[i].img = "extension/搬山道士/image/character/net/" + i + ".jpg";

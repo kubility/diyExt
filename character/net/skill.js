@@ -296,7 +296,7 @@ const skill = {
 			}
 		},
 	},
-	
+
 	// 步惊云 - 你不要过来啊！
 	qun_dont_come: {
 		audio: "ext:搬山道士/audio/skill:2",
@@ -308,9 +308,37 @@ const skill = {
 			return true;
 		},
 		content: async function (event, trigger, player) {
+
+			// 创建 GIF 元素
+			ui.backgroundMusic.pause();
+			const gifOverlay = ui.create.div();
+			
+			// 直接设置样式
+			gifOverlay.style.cssText = `
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-image: url('extension/搬山道士/image/character/net/bygl.gif');
+				background-position: center;
+				background-repeat: no-repeat;
+				background-size: cover;
+				z-index: 9999;
+				pointer-events: none;
+			`;
+			
+			document.body.appendChild(gifOverlay);
 			player.say('你不要过来啊！');
 			game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', '你不要过来啊');
-			const judge = await player.judge();
+			// 使用标准 setTimeout（推荐）
+			await new Promise(resolve => {
+				setTimeout(resolve, 2340);  // 等待2.34秒
+			});
+			gifOverlay.delete();
+			ui.backgroundMusic.play();
+
+			const judge = await player.judge().forResult();
 			const suit = judge.suit;
 			const target = trigger.player;
 
@@ -357,7 +385,7 @@ const skill = {
 			},
 		},
 	},
- 
+
 	// 步惊云 - 麒麟臂乱甩
 	qun_kirin_arm: {
 		audio: "ext:搬山道士/audio/skill:3",
@@ -442,7 +470,7 @@ const skill = {
 				get.subtype(event.card) === 'equip1';
 		},
 		content: async function (event, trigger, player) {
-			const judge = await player.judge();
+			const judge = await player.judge().forResult();
 			const suit = judge.suit;
 			const weapon = player.getEquip(1);
 
@@ -501,6 +529,263 @@ const skill = {
 					if (get.type(card) === 'equip' && get.subtype(card) === 'equip1') {
 						return [0.5, 0.5];
 					}
+				},
+			},
+		},
+	},
+
+	// 唐纳德·特朗普 - 魔音
+	qun_moyin: {
+		audio: "ext:搬山道士/audio/skill:2",
+		trigger: {
+			player: "useCardToAfter",
+		},
+		forced: true,
+		filter: function (event, player) {
+			if (!event.card) return false;
+			return event.card.name === 'sha' || get.type(event.card) === 'trick';
+		},
+		content: async function (event, trigger, player) {
+			const result = await player.judge().forResult();
+			const color = result.color;
+			const targets = trigger.targets;
+			if (color === 'red') {
+				player.say('China! China! China!');
+				trigger.card.wuxie = true;
+			} else if (color === 'black') {
+				player.say("It's gonna be Huge! Yuge!");
+				for (const target of targets) {
+					if (target.countCards('h') > 0) {
+						const discard = await target.chooseCard('h', true, '弃置一张手牌，否则本回合武将技能无效').forResult();
+						if (discard.bool) {
+							await target.discard(discard.cards);
+						} else {
+							target.addTempSkill('qun_moyin_disable', { player: 'phaseUse' });
+						}
+					} else {
+						target.addTempSkill('qun_moyin_disable', { player: 'phaseUse' });
+					}
+				}
+			}
+		},
+		subSkill: {
+			disable: {
+				charlotte: true,
+				mark: true,
+				marktext: "禁",
+				intro: {
+					content: "本回合武将技能无效"
+				},
+				trigger: {
+					player: "useSkill",
+				},
+				filter: function (event, player) {
+					return event.skill && !event.skill.includes('qun_moyin_disable');
+				},
+				content: async function (event, trigger, player) {
+					event.cancel();
+				},
+			},
+		},
+		ai: {
+			effect: {
+				target: function (card, player, target) {
+					if (card.name === 'sha' || get.type(card) === 'trick') {
+						return [0.5, 0.5];
+					}
+				},
+			},
+		},
+	},
+
+	// 唐纳德·特朗普 - 建墙
+	qun_jianqiang: {
+		audio: "ext:搬山道士/audio/skill:2",
+		enable: "phaseUse",
+		usable: 1,
+		filter: function (event, player) {
+			return player.countCards('h') >= 2;
+		},
+		filterTarget: function (card, player, target) {
+			return target !== player;
+		},
+		selectTarget: 1,
+		content: async function (event, trigger, player) {
+			const target = event.targets[0];
+			const discard = await player.chooseCard('h', 2, true, '弃置两张手牌').forResult();
+			if (discard.bool) {
+				await player.discard(discard.cards);
+				player.say('I will build a great wall!');
+				target.link(true);
+				target.addTempSkill('qun_jianqiang_effect', { player: 'phaseUse' });
+			}
+		},
+		subSkill: {
+			effect: {
+				charlotte: true,
+				mark: true,
+				marktext: "墙",
+				intro: {
+					content: "不能使用或打出牌指定特朗普为目标，且计算与特朗普的距离+1"
+				},
+				mod: {
+					attackRange: function (player, num) {
+						return Math.max(1, num - 1);
+					},
+					globalFrom: function (from, to, distance) {
+						if (to.hasSkill('qun_jianqiang')) {
+							return distance + 1;
+						}
+						return distance;
+					},
+				},
+				trigger: {
+					player: "useCardToBefore",
+				},
+				filter: function (event, player) {
+					if (!event.targets || !event.targets.includes(player)) return false;
+					const trump = game.findPlayer(i => i.hasSkill('qun_jianqiang'));
+					if (!trump) return false;
+					return event.targets.includes(trump);
+				},
+				content: async function (event, trigger, player) {
+					trigger.cancel();
+					player.say('该死的墙!');
+				},
+			},
+		},
+		ai: {
+			order: 6,
+			result: {
+				target: function (player, target) {
+					return -1;
+				},
+				player: function (player, target) {
+					return 1;
+				},
+			},
+		},
+	},
+
+	// 唐纳德·特朗普 - 复国
+	qun_fuguo: {
+		audio: "ext:搬山道士/audio/skill:2",
+		trigger: {
+			player: "phaseBegin",
+		},
+		forced: true,
+		juexingji: true,
+		filter: function (event, player) {
+			return player.isDamaged() && player.countCards('h') > player.hp;
+		},
+		content: async function (event, trigger, player) {
+			player.say('Make America Great Again!');
+			await player.loseMaxHp();
+			await player.recover();
+
+			if (player.hasSkill('qun_tuite')) {
+				await player.draw(3);
+				const sha = await player.chooseCard('h', true, '选择一张牌作为火杀').forResult();
+				if (sha.bool) {
+					const targets = game.filterPlayer(i => i !== player);
+					for (const target of targets) {
+						await target.damage(1, 'fire');
+					}
+				}
+			} else {
+				player.addSkill('qun_tuite');
+			}
+		},
+		ai: {
+			effect: {
+				target: function (card, player, target) {
+					if (player.hasSkill('qun_fuguo')) {
+						return [0.5, 0.5];
+					}
+				},
+			},
+		},
+	},
+
+	// 唐纳德·特朗普 - 推特
+	qun_tuite: {
+		audio: "ext:搬山道士/audio/skill:2",
+		enable: "phaseUse",
+		usable: 1,
+		filter: function (event, player) {
+			return player.countCards('h') > 0;
+		},
+		content: async function (event, trigger, player) {
+			const choose = await player.chooseCard('h', true, '选择一张牌展示').forResult();
+			if (choose.bool) {
+				const card = choose.cards[0];
+				await player.showCards(card);
+				const suit = get.suit(card);
+				const num = get.number(card);
+				const suitText = {
+					'heart': '红桃',
+					'diamond': '方块',
+					'spade': '黑桃',
+					'club': '梅花'
+				}[suit];
+				const cardText = suitText + num + '!';
+				player.say(`Twitter! ${cardText}!`);
+
+				const targets = game.filterPlayer(i => i !== player);
+				const sameSuitCards = [];
+
+				for (const target of targets) {
+					if (target.countCards('h') > 0) {
+						const result = await target.chooseCard('h', true, `展示一张${suitText}牌`).set('ai', function(card) {
+							if (get.suit(card) === suit) {
+								return 10;
+							}
+							return 0;
+						}).forResult();
+						if (result.bool) {
+							const targetCard = result.cards[0];
+							if (get.suit(targetCard) === suit) {
+								sameSuitCards.push({ target, card: targetCard });
+							} else {
+								await target.damage(1, 'thunder');
+								if (target.countCards('h') > 0) {
+									const discard = await target.chooseCard('h', true, '弃置一张牌').forResult();
+									if (discard.bool) {
+										await target.discard(discard.cards);
+									}
+								}
+							}
+						} else {
+							await target.damage(1, 'thunder');
+							if (target.countCards('h') > 0) {
+								const discard = await target.chooseCard('h', true, '弃置一张牌').forResult();
+								if (discard.bool) {
+									await target.discard(discard.cards);
+								}
+							}
+						}
+					} else {
+						await target.damage(1, 'thunder');
+					}
+				}
+
+				if (sameSuitCards.length > 0) {
+					const gain = await player.chooseCard(sameSuitCards.map(i => i.card), true, '获得一张牌').forResult();
+					if (gain.bool) {
+						const gainCard = gain.cards[0];
+						const owner = sameSuitCards.find(i => i.card === gainCard);
+						if (owner) {
+							await player.gain(gainCard, owner.target, 'giveAuto');
+						}
+					}
+				}
+			}
+		},
+		ai: {
+			order: 6,
+			result: {
+				player: function (player, target) {
+					return 1;
 				},
 			},
 		},

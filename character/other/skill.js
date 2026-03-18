@@ -260,38 +260,29 @@ const skill = {
 
 			ui.backgroundMusic.pause();
 			// 创建 GIF 元素
-			event.gif = document.createElement('div');
-			event.gif.className = 'yldb-background';
-			event.gif.style.cssText = `
+			const gif = ui.create.div();
+			
+			// 直接设置样式
+			gif.style.cssText = `
 				position: fixed;
 				top: 0;
 				left: 0;
 				width: 100%;
 				height: 100%;
-				z-index: 9999;
-				background: url(extension/搬山道士/image/character/other/yldb_pojun.gif) no-repeat center center;
+				background-image: url('extension/搬山道士/image/character/other/yldb_pojun.gif');
+				background-position: center;
+				background-repeat: no-repeat;
 				background-size: cover;
+				z-index: 9999;
+				pointer-events: none;
 			`;
-
-			// 添加到页面
-			const targetElement = ui.window || document.body;
-			if (targetElement) {
-				document.body.insertBefore(event.gif, targetElement);
-			} else {
-				document.body.appendChild(event.gif);
-			}
-			/* event.gif = ui.create.div('.yldb-background');
-			event.gif.setBackgroundImage('extension/搬山道士/image/character/other/yldb_pojun.gif');
-			document.body.insertBefore(event.gif, ui.window);
-			*/
-
+			
+			document.body.appendChild(gif);
 			game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'yldb_pojun');
 			await new Promise(resolve => {
-				game.delay(0, 15000);
-				resolve();
+				setTimeout(resolve, 15000);  // 等待15秒
 			});
-
-			event.gif.delete();
+			gif.delete();
 			ui.backgroundMusic.play();
 		},
 		ai: {
