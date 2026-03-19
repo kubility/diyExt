@@ -272,7 +272,7 @@ const skill = {
 				background-image: url('extension/搬山道士/image/character/other/yldb_pojun.gif');
 				background-position: center;
 				background-repeat: no-repeat;
-				background-size: cover;
+				background-size: contain;
 				z-index: 9999;
 				pointer-events: none;
 			`;

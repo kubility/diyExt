@@ -312,7 +312,7 @@ const skill = {
 			// 创建 GIF 元素
 			ui.backgroundMusic.pause();
 			const gifOverlay = ui.create.div();
-			
+
 			// 直接设置样式
 			gifOverlay.style.cssText = `
 				position: fixed;
@@ -323,11 +323,11 @@ const skill = {
 				background-image: url('extension/搬山道士/image/character/net/bygl.gif');
 				background-position: center;
 				background-repeat: no-repeat;
-				background-size: cover;
+				background-size: contain;
 				z-index: 9999;
 				pointer-events: none;
 			`;
-			
+
 			document.body.appendChild(gifOverlay);
 			player.say('你不要过来啊！');
 			game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', '你不要过来啊');
@@ -452,9 +452,10 @@ const skill = {
 		intro: {
 			name: "剑",
 			content: function (storage, player) {
-				if (player.countMark('qun_sword_curse') === 1) {
+				const curse = storage.qun_sword_curse || player.storage.qun_sword_curse;
+				if (curse === 'heart') {
 					return '好剑';
-				} else if (player.countMark('qun_sword_curse') === 2) {
+				} else if (curse === 'spade') {
 					return '好贱';
 				} else {
 					return '郝建';
@@ -473,11 +474,11 @@ const skill = {
 			const judge = await player.judge().forResult();
 			const suit = judge.suit;
 			const weapon = player.getEquip(1);
-
+			delete player.storage.qun_sword_curse;
 			if (suit === 'heart') {
 				player.say('绝世好剑，归我了！');
 				player.addTempSkill('qun_sword_curse_boost', { player: 'phaseEnd' });
-				player.addMark('qun_sword_curse', 1);
+				player.storage.qun_sword_curse = 'heart';
 
 			} else if (suit === 'diamond') {
 				if (player.countCards('h') > 0) {
@@ -488,7 +489,7 @@ const skill = {
 				await player.draw(2);
 				player.say('绝世好剑，怎么这样！');
 				player.addTempSkill('qun_sword_curse_weak', { player: 'phaseEnd' });
-				player.addMark('qun_sword_curse', 2);
+				player.storage.qun_sword_curse = 'spade';
 			} else {
 				if (weapon) {
 					await player.discard(weapon);
@@ -560,10 +561,10 @@ const skill = {
 						if (discard.bool) {
 							await target.discard(discard.cards);
 						} else {
-							target.addTempSkill('qun_moyin_disable', { player: 'phaseUse' });
+							target.addTempSkill('qun_moyin_disable', { player: 'phaseBegin' });
 						}
 					} else {
-						target.addTempSkill('qun_moyin_disable', { player: 'phaseUse' });
+						target.addTempSkill('qun_moyin_disable', { player: 'phaseBegin' });
 					}
 				}
 			}
@@ -617,7 +618,7 @@ const skill = {
 				await player.discard(discard.cards);
 				player.say('I will build a great wall!');
 				target.link(true);
-				target.addTempSkill('qun_jianqiang_effect', { player: 'phaseUse' });
+				target.addTempSkill('qun_jianqiang_effect', { player: 'phaseBegin' });
 			}
 		},
 		subSkill: {
@@ -736,7 +737,7 @@ const skill = {
 
 				for (const target of targets) {
 					if (target.countCards('h') > 0) {
-						const result = await target.chooseCard('h', true, `展示一张${suitText}牌`).set('ai', function(card) {
+						const result = await target.chooseCard('h', true, `展示一张${suitText}牌`).set('ai', function (card) {
 							if (get.suit(card) === suit) {
 								return 10;
 							}
@@ -788,6 +789,311 @@ const skill = {
 					return 1;
 				},
 			},
+		},
+	},
+
+	// 雷军 - 友商
+	qun_youshang: {
+		audio: "ext:搬山道士/audio/skill:2",
+		enable: "phaseUse",  // 出牌阶段使用
+		usable: 1,  // 每回合限1次
+		mark: false,
+		markText: "友商",
+		intro: {
+			content: "友商是鲨臂"
+		},
+		filter: function (event, player) {
+			return !player.storage.qun_youshang_friend;
+		},
+		content: async function (event, trigger, player) {
+			const targetResult = await player.chooseTarget('观看一名角色的手牌', function (card, player, target) {
+				return target != player && target.countCards('h') > 0;
+			}).forResult();
+
+			if (!targetResult.bool || targetResult.targets.length === 0) return;
+			const target = targetResult.targets[0];
+			await player.viewCards("友商是鲨臂",target.getCards('h'));
+			game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ysssb');
+			player.storage.qun_youshang_friend = target.playerid;
+			target.markSkill('qun_youshang');
+		},
+		ai: {
+			expose: 0.3,
+		},
+		group: ['qun_youshang_clear'],
+		subSkill: {
+			clear: {
+				trigger: 'phaseBegin',
+				filter: function (event, player) {
+					return player.storage.qun_youshang_friend;
+				},
+				content: async function (event, trigger, player) {
+					const friends = game.findPlayer(player => player.playerid === player.storage.qun_youshang_friend);
+					if (friends && friends.length > 0) {
+						for (const friend of friends) {
+							friend.unmarkSkill('qun_youshang');
+						}
+					}
+					delete player.storage.qun_youshang_friend;
+				},
+			},
+		},
+	},
+	// 雷军 - OK（主动技能）
+	qun_ok: {
+		audio: "ext:搬山道士/audio/skill:1",
+		enable: "phaseUse",
+		usable: 1,
+		filter: function (event, player) {
+			return player.countCards('h') > 0;
+		},
+		filterTarget: function (card, player, target) {
+			return target !== player;
+		},
+		selectTarget: 1,
+		content: async function (event, trigger, player) {
+			const discard = await player.chooseCard('h', true, '弃置一张手牌').forResult();
+			if (!discard.bool) return;
+
+			await player.discard(discard.cards);
+			const target = event.targets[0];
+
+			const judge = await player.judge().forResult();
+
+			const suit = judge.suit;
+
+			if (suit === 'heart') {
+				const choices = ['摸两张牌', '回复1点体力', '本回合使用的下一张牌无视距离'];
+				const choice = await player.chooseControl(choices).set('prompt', '选择一项效果').forResult();
+				const lucky = Math.random() < 0.5 ? player : target;
+				if (choice.control === '摸两张牌') {
+					await lucky.draw(2);
+				} else if (choice.control === '回复1点体力') {
+					if (lucky.hp === lucky.maxHp) {
+						await lucky.gainMaxHp();
+					} else {
+						await lucky.recover();
+					}
+				} else if (choice.control === '本回合使用的下一张牌无视距离') {
+					lucky.addTempSkill('qun_ok_range', { player: 'phaseUseEnd' });
+				}
+			} else if (suit === 'spade') {
+				if (target.countCards('h') > 0) {
+					const give = await target.chooseCard('h', true, '交给雷军一张手牌').forResult();
+					if (give.bool) {
+						await target.give(give.cards, player);
+					}
+				}
+				target.addTempSkill('qun_ok_invalid', { player: 'phaseUseEnd' });
+				player.say('Are you Not OK?');
+			} else {
+				player.draw();
+				target.draw();
+				player.say('Hmm...');
+			}
+		},
+		ai: {
+			order: 6,
+			result: {
+				player: function (player, target) {
+					return 1;
+				},
+				target: function (player, target) {
+					const friend = game.findPlayer(player => player.playerid === player.storage.qun_youshang_friend);
+					if (friend && target === friend) {
+						return 2;
+					}
+					return get.attitude(player, target) > 0 ? 1 : -1;
+				},
+			},
+		},
+		subSkill: {
+			range: {
+				charlotte: true,
+				mod: {
+					targetInRange: function (card, player, target) {
+						return true;
+					},
+				},
+			},
+			invalid: {
+				charlotte: true,
+				mod: {
+					cardEnabled: function (card, player) {
+						return false;
+					},
+				},
+			},
+		},
+	},
+
+	// 雷军 - 性价比
+	qun_xingjiabi: {
+		audio: "ext:搬山道士/audio/skill:2",
+		trigger: {
+			player: "phaseDrawBegin",
+		},
+		filter: function (event, player) {
+			return true;
+		},
+		forced: true,
+		content: async function (event, trigger, player) {
+			trigger.changeToZero();
+			const quotes = ['感动人心，价格厚道！', '我们要和用户做朋友！'];
+			const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+			player.say(randomQuote);
+
+			await player.draw(3);
+			const { cards } = event;
+			const sortedCards = cards.sort((a, b) => get.number(a) - get.number(b));
+			const otherCards = sortedCards.slice(1);
+
+			const result = await player.chooseTarget('将剩余牌交给一名其他角色', true, (card, player, target) => {
+				return target !== player;
+			}).forResult();
+
+			if (result.bool && result.targets.length > 0) {
+				const target = result.targets[0];
+				await player.give(otherCards, target);
+				target.addTempSkill('qun_xingjiabi_draw', { player: 'phaseUseBegin' });
+			}
+		},
+		ai: {
+			order: 5,
+			result: {
+				player: function (player, target) {
+					return 1;
+				},
+			},
+		},
+		subSkill: {
+			draw: {
+				charlotte: true,
+				trigger: {
+					player: "phaseDraw",
+				},
+				filter: function (event, player) {
+					return true;
+				},
+				forced: true,
+				content: async function (event, trigger, player) {
+					event.num = Math.min(event.num + 1, 5);
+				},
+			},
+		},
+	},
+
+	// 雷军 - 冲高
+	qun_chonggao: {
+		audio: "ext:搬山道士/audio/skill:2",
+		trigger: {
+			player: "phaseUseBegin",
+		},
+		filter: function (event, player) {
+			return player.countCards('h') > 0;
+		},
+		forced: true,
+		content: async function (event, trigger, player) {
+			const cards = player.getCards('h');
+			const count = cards.length;
+
+			if (player.countCards('h') > player.hp) {
+				// 手牌数 > hp：全部变成点数大于7的杀
+				await player.lose(cards, ui.discardPile);
+				const newCards = [];
+				for (let i = 0; i < count; i++) {
+					const newCard = game.createCard('sha', 'diamond', Math.floor(Math.random() * 6) + 8);
+					newCards.push(newCard);
+				}
+				await player.gain(newCards, 'draw');
+				player.addTempSkill('qun_chonggao_sha', { player: 'phaseEnd' });
+			} else {
+				// 手牌数 ≤ hp：全部变成点数小于7的闪
+				await player.lose(cards, ui.discardPile);
+				const newCards = [];
+				for (let i = 0; i < count; i++) {
+					const newCard = game.createCard('shan', 'club', Math.floor(Math.random() * 6) + 1);
+					newCards.push(newCard);
+				}
+				await player.gain(newCards, 'draw');
+			}
+		},
+		subSkill: {
+			sha: {
+				charlotte: true,
+				mod: {
+					cardUsable: function (card, player) {
+						if (card.name === 'sha') {
+							return Infinity;
+						}
+						return null;
+					},
+				},
+			},
+		},
+		ai: {
+			effect: {
+				target: function (card, player, target) {
+					if (card.name === 'sha') {
+						return [0.5, 0.5];
+					}
+				},
+			},
+		},
+	},
+
+	// 雷军 - 隐藏彩蛋：米粉
+	qun_mifen: {
+		audio: "ext:搬山道士/audio/skill:2",
+		trigger: {
+			global: "damageBegin",
+		},
+		filter: function (event, player) {
+			if (!event.source || !event.source.hasSkill('qun_chonggao')) return false;
+			const huawei = game.findPlayer(i => i.hasSkill('qun_chonggao') && i !== event.source);
+			return event.source.hasSkill('qun_chonggao') && huawei;
+		},
+		forced: true,
+		content: async function (event, trigger, player) {
+			event.num++;
+		},
+	},
+
+	// 雷军 - 隐藏彩蛋：印度神曲
+	qun_yindushenqu: {
+		audio: "ext:搬山道士/audio/skill:2",
+		trigger: {
+			player: "judgeEnd",
+		},
+		filter: function (event, trigger, player) {
+			const friend = game.findPlayer(player => player.playerid === player.storage.qun_youshang_friend);
+			return friend && event.result.suit === 'heart';
+		},
+		forced: true,
+		content: async function (event, trigger, player) {
+			const gif = ui.create.div();
+			gif.style.cssText = `
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-image: url('extension/搬山道士/image/character/net/areyouok.gif');
+				background-position: center;
+				background-repeat: no-repeat;
+				background-size: contain;
+				z-index: 9999;
+				pointer-events: none;
+			`;
+			document.body.appendChild(gif);
+
+			game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'areyouok2');
+
+			await new Promise(resolve => {
+				setTimeout(resolve, 5000);
+			});
+
+			gif.delete();
 		},
 	},
 

@@ -30,6 +30,14 @@ const character = {
 		hp: 4,
 		skills: ["qun_moyin", "qun_jianqiang", "qun_fuguo", "qun_tuite"],
 	},
+
+	// 雷军
+	qun_leijun: {
+		sex: "male",
+		group: "qun",
+		hp: 3,
+		skills: ["qun_ok", "qun_youshang", "qun_xingjiabi", "qun_chonggao", "qun_mifen", "qun_yindushenqu"],
+	},
 };
 for (let i in character) {
 	character[i].img = "extension/搬山道士/image/character/net/" + i + ".jpg";
