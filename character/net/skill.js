@@ -450,9 +450,10 @@ const skill = {
 		mark: true,
 		marktext: "⚔",
 		intro: {
-			name: "剑",
+			name: '剑',
 			content: function (storage, player) {
-				const curse = storage.qun_sword_curse || player.storage.qun_sword_curse;
+				const curse = player.storage && player.storage.qun_sword_curse;
+				if (!curse) return '郝建';
 				if (curse === 'heart') {
 					return '好剑';
 				} else if (curse === 'spade') {
