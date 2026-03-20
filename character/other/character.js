@@ -10,14 +10,6 @@ const character = {
 		tags: ["zhu"],
 	},
 
-	// 专业律师
-	zhuanyelvshi: {
-		sex: "male",
-		group: "qun",
-		hp: 4,
-		skills: ["打官司", "觉醒"],
-	},
-
 	// 管理大师
 	guanlidashi: {
 		sex: "male",

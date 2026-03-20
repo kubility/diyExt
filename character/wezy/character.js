@@ -39,6 +39,13 @@ const character = {
 		hp: 3,
 		skills: ["qun_ok", "qun_youshang", "qun_xingjiabi", "qun_chonggao", "qun_mifen", "qun_yindushenqu"],
 	},
+		// 专业律师
+	zhuanyelvshi: {
+		sex: "male",
+		group: "qun",
+		hp: 4,
+		skills: ["打官司", "觉醒"],
+	},
 
 
 };
