@@ -52,6 +52,14 @@ const config = {
 		init: true,
 		intro: "葫芦娃系列角色",
 	},
+
+	// 万恶之源
+	wezy: {
+		name: "万恶之源",
+		init: true,
+		intro: "万恶之源系列角色",
+	},
+
 	tip2: {
 		name: ui.joint`
 			<hr aria-hidden="true">

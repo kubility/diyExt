@@ -63,6 +63,13 @@ export async function precontent(config, pack) {
 		await loadPack("huluwa", "葫芦兄弟", ["character"]);
 		console.log("葫芦兄弟分组加载完成");
 	}
+
+	// 加载万恶之源分组
+	if (lib.config.extension_搬山道士_wezy) {
+		await loadPack("wezy", "万恶之源", ["character"]);
+		console.log("万恶之源分组加载完成");
+	}
+
 	//================格叽格叽格叽格叽====================
 	//加载卡牌
 	if (lib.config.extension_搬山道士_dgch) {
