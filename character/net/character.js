@@ -16,28 +16,7 @@ const character = {
 		hp: 4,
 		skills: ["lyg_yinxiang", "lyg_yaoqiang", "lyg_saodang", "qiangjie65", "zhanlan659", "pofang224"],
 	},
-	qun_bujingyun: {
-		sex: "male",
-		group: "qun",
-		hp: 4,
-		skills: ["qun_dont_come", "qun_kirin_arm", "qun_sword_curse"],
-	},
-
-	// 唐纳德·特朗普
-	qun_trump: {
-		sex: "male",
-		group: "qun",
-		hp: 4,
-		skills: ["qun_moyin", "qun_jianqiang", "qun_fuguo", "qun_tuite"],
-	},
-
-	// 雷军
-	qun_leijun: {
-		sex: "male",
-		group: "qun",
-		hp: 3,
-		skills: ["qun_ok", "qun_youshang", "qun_xingjiabi", "qun_chonggao", "qun_mifen", "qun_yindushenqu"],
-	},
+	
 };
 for (let i in character) {
 	character[i].img = "extension/搬山道士/image/character/net/" + i + ".jpg";

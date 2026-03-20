@@ -9,6 +9,37 @@ const character = {
 		skills: ["wezy_xiayi", "wezy_xiuche", "wezy_dantiao"],
 	},
 
+	// 吴京
+	wezy_wujing: {
+		sex: "male",
+		group: "qun",
+		hp: 4,
+		skills: ["wezy_duoming", "wezy_tanke_wujing", "wezy_zhanlang_paoxiao"],
+	},
+	// 步惊云
+	qun_bujingyun: {
+		sex: "male",
+		group: "qun",
+		hp: 4,
+		skills: ["qun_dont_come", "qun_kirin_arm", "qun_sword_curse"],
+	},
+
+	// 唐纳德·特朗普
+	qun_trump: {
+		sex: "male",
+		group: "qun",
+		hp: 4,
+		skills: ["qun_moyin", "qun_jianqiang", "qun_fuguo", "qun_tuite"],
+	},
+
+	// 雷军
+	qun_leijun: {
+		sex: "male",
+		group: "qun",
+		hp: 3,
+		skills: ["qun_ok", "qun_youshang", "qun_xingjiabi", "qun_chonggao", "qun_mifen", "qun_yindushenqu"],
+	},
+
 
 };
 for (let i in character) {
