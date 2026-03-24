@@ -5,7 +5,6 @@ const skill = {
 	wezy_xiayi: {
 		audio: "ext:搬山道士/audio/skill:5",
 		enable: "phaseUse",
-		usable: 1,
 		filter: function (event, player) {
 			return player.countCards('h') > 0;
 		},
@@ -161,7 +160,7 @@ const skill = {
 					target: "useCardToBefore",
 				},
 				filter: function (event, player) {
-					return event.card.name === 'sha' && event.player !== player;
+					return event.card && event.card.name === 'sha' && event.player !== player;
 				},
 				forced: true,
 				content: async function (event, trigger, player) {
@@ -229,8 +228,8 @@ const skill = {
 				{
 					question: "野外生存我把人干了，你干过吗？",
 					audio: "duoming4",
-					yes: () => {
-						player.useCard({ name: 'juedou' }, target, false);
+					yes: async () => {
+						await player.useCard({ name: 'juedou', isCard: true }, target);
 					},
 					no: () => {
 						target.addTempSkill('wezy_duoming_notrick', { global: 'roundStart' });
@@ -250,7 +249,7 @@ const skill = {
 					question: "我能开飞机，你会吗？",
 					audio: "duoming6",
 					yes: async () => {
-						await player.useCard({ name: 'wuzhong' }, player, false);
+						await player.useCard({ name: 'wuzhong', isCard: true }, player);
 					},
 					no: () => {
 						target.addTempSkill('wezy_duoming_distance', { global: 'roundStart' });
@@ -264,9 +263,11 @@ const skill = {
 					},
 					no: async () => {
 						if (target.countCards('e') > 0) {
-							const result = await player.chooseCard('选择弃置目标一张装备牌', target.getCards('e'), true).forResult();
-							if (result.bool) {
+							const result = await player.choosePlayerCard(target, 'e', true, '选择弃置目标一张装备牌').forResult();
+							if (result.bool && result.cards && result.cards.length > 0) {
 								await target.discard(result.cards);
+							} else {
+								await target.damage();
 							}
 						} else {
 							await target.damage();
@@ -457,7 +458,7 @@ const skill = {
 				forced: true,
 				content: async function (event, trigger, player) {
 					if (player.countCards('h') > 0) {
-						const result = await player.chooseCard('使用【杀】需额外弃置1张手牌', 'h', true).forResult();
+						const result = await player.chooseCard('h', true, '使用【杀】需额外弃置1张手牌').forResult();
 						if (result.bool) {
 							await player.discard(result.cards);
 						}
@@ -601,9 +602,9 @@ const skill = {
 		audio: "ext:搬山道士/audio/skill:2",
 		trigger: { target: "useCardToBefore" },
 		forced: true,
-		filter: function (event, player) {
+		filter: function (event, trigger, player) {
 			if (!event.targets || !event.targets.includes(player)) return false;
-			if (event.player == player) return false;
+			if (trigger.player == player) return false;
 			return true;
 		},
 		content: async function (event, trigger, player) {
@@ -643,22 +644,22 @@ const skill = {
 
 			if (suit === 'heart') {
 				game.log(target, '被迫选择其他目标...');
-				if (event.targets.length === 1) {
+				if (trigger.targets && trigger.targets.length === 1) {
 					const newTarget = await target.chooseTarget('选择一个新目标', (card, player, target) => {
-						return target != player && lib.filter.filterTarget.apply(this, [card, player, target]);
+						return target != player && lib.filter.filterTarget(card, player, target);
 					}).forResult();
 					if (newTarget.bool && newTarget.targets.length > 0) {
-						event.targets = newTarget.targets;
+						trigger.targets = newTarget.targets;
 					} else {
-						event.cancel();
+						trigger.cancel();
 					}
 				} else {
-					event.cancel();
+					trigger.cancel();
 				}
 
 			} else if (suit === 'diamond') {
 				const drawnCards = await player.draw(1);
-				player.say('好可怕，我挡！');
+				player.say('好可怕！');
 				if (drawnCards && drawnCards.length > 0) {
 					await player.showCards(drawnCards);
 				}
@@ -1458,7 +1459,7 @@ const skill = {
 		content: function () {
 			player.maxHp = player.maxHp * 2;
 			player.recover(3);
-			player.node.avatar.setBackgroundImage(lib.assetURL + '/image/character/wezy/zhuanyelvshi2.jpg');
+			player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/zhuanyelvshi2.jpg');
 			player.addSkill('审判');
 			player.awakenSkill('觉醒');
 		},
@@ -1521,6 +1522,254 @@ const skill = {
 				}
 			}
 		}
+	},
+
+	// 哪吒&敖丙技能
+	// 哪吒&敖丙技能
+	// 混元（主动技，回合开始阶段限一次）
+	wezy_hunyuan: {
+		audio: "ext:搬山道士/audio/skill:5",
+		trigger: {
+			player: ["phaseBegin", "phaseEnd"]
+		},
+		filter: function (event, player) {
+			if (player.maxHp <= 1) return false;
+			return true;
+		},
+		content: async function (event, trigger, player) {
+			player.say('本是混元一体，灵魔同源不分彼此！');
+			const currentForm = player.storage.wezy_hunyuan_form || 'mowan';
+			const newForm = currentForm === 'mowan' ? 'lingzhu' : 'mowan';
+			const choices = ['失去1点体力', '失去1点体力上限'];
+			const result = await player.chooseControl(choices).set('prompt', '选择一项效果').forResult();
+			if (result.control === '失去1点体力') {
+				await player.loseHp();
+			} else {
+				await player.loseMaxHp();
+			}
+
+			// 切换形态
+			if (newForm === 'mowan') {
+				// 切换到哪吒
+				player.storage.wezy_hunyuan_form = 'mowan';
+				player.node.name.textContent = '哪吒';
+				player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/nezha.jpg');
+				player.removeSkill('wezy_lingzhu');
+				player.removeSkill('wezy_wanlongjia');
+				player.addSkill('wezy_mowan');
+				player.addSkill('wezy_nitian');
+			} else {
+				// 切换到敖丙
+				player.storage.wezy_hunyuan_form = 'lingzhu';
+				player.node.name.textContent = '敖丙';
+				player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/aobing.jpg');
+				player.removeSkill('wezy_mowan');
+				player.removeSkill('wezy_nitian');
+				player.addSkill('wezy_lingzhu');
+				player.addSkill('wezy_wanlongjia');
+
+			}
+		},
+		onremove: function (player) {
+			delete player.storage.wezy_hunyuan_form;
+		},
+		init: function (player) {
+			if (!player.storage.wezy_hunyuan_form) {
+				player.storage.wezy_hunyuan_form = 'mowan';
+			}
+			// 初始为哪吒形态，移除敖丙技能
+			player.removeSkill('wezy_lingzhu');
+			player.removeSkill('wezy_wanlongjia');
+			player.addSkill('wezy_mowan');
+			player.addSkill('wezy_nitian');
+			// 延迟设置名字和头像，确保 UI 已经准备好
+			setTimeout(function () {
+				player.node.name.textContent = '哪吒';
+				player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/nezha.jpg');
+			}, 1000);
+		},
+	},
+
+	// 魔丸（锁定技）
+	wezy_mowan: {
+		audio: "ext:搬山道士/audio/skill:2",
+		forced: true,
+		trigger: {
+			player: "useCard1",
+		},
+		filter: function (event, player) {
+			return event.card && event.card.name === 'sha';
+		},
+		content: async function (event, trigger, player) {
+			trigger.card.nature = 'fire';
+			trigger.card.storage = trigger.card.storage || {};
+			trigger.card.storage.wezy_mowan = true;
+		},
+		group: ['wezy_mowan_draw'],
+		subSkill: {
+			draw: {
+				charlotte: true,
+				trigger: {
+					source: "damageEnd",
+				},
+				filter: function (event, player) {
+					if (!event.card || !event.card.storage || !event.card.storage.wezy_mowan) return false;
+					return true;
+				},
+				forced: true,
+				content: async function (event, trigger, player) {
+					await player.draw(1);
+				},
+			},
+		},
+	},
+
+	// 逆天（主动技，出牌阶段限一次）
+	wezy_nitian: {
+		audio: "ext:搬山道士/audio/skill:1",
+		enable: "phaseUse",
+		usable: 1,
+		filter: function (event, player) {
+			const nonShaCards = player.getCards('h').filter(card => card.name !== 'sha');
+			return nonShaCards.length > 0;
+		},
+		content: async function (event, trigger, player) {
+			const nonShaCards = player.getCards('h').filter(card => card.name !== 'sha');
+			if (nonShaCards.length > 0) {
+				await player.discard(nonShaCards);
+			}
+
+			// 清除所有负面状态
+			if (player.isLinked()) {
+				player.link(false);
+			}
+
+			player.addTempSkill('wezy_nitian_effect', { player: 'phaseUseAfter' });
+		},
+		subSkill: {
+			effect: {
+				charlotte: true,
+				mod: {
+					targetInRange: function (card, player, target) {
+						if (card.name === 'sha' && card.nature === 'fire') return true;
+					},
+					cardUsable: function (card, player, num) {
+						if (card.name === 'sha' && card.nature === 'fire') return Infinity;
+					},
+				},
+				trigger: {
+					player: "useCardToBefore",
+				},
+				filter: function (event, player) {
+					return event.card && event.card.name === 'sha' && event.card.nature === 'fire';
+				},
+				forced: true,
+				content: async function (event, trigger, player) {
+					if (!trigger.directHit) {
+						trigger.directHit = [];
+					}
+					trigger.directHit.add(trigger.target);
+				},
+			},
+		},
+	},
+
+	// 灵珠（锁定技）
+	wezy_lingzhu: {
+		audio: "ext:搬山道士/audio/skill:3",
+		forced: true,
+		trigger: {
+			player: "damageBegin4",
+		},
+		filter: function (event, player) {
+			if (!event.card || !event.card.name) return false;
+			if (event.card.name === 'sha' && event.card.nature) return true;
+			return false;
+		},
+		content: async function (event, trigger, player) {
+			trigger.cancel();
+			player.say('寒冰覆身，万火不侵。');
+		},
+		ai: {
+			effect: {
+				target: function (card, player, target, current) {
+					// 如果目标有灵珠技能，属性杀对其效果降低
+					if (target.hasSkill('wezy_lingzhu') && card.name === 'sha' && card.nature) {
+						return [0, 0]; // 属性杀对灵珠无效，不建议使用
+					}
+				},
+			},
+		},
+	},
+
+	// 万龙甲（主动技）
+	wezy_wanlongjia: {
+		audio: "ext:搬山道士/audio/skill:4",
+		trigger: {
+			player: "damageBegin3",
+		},
+		filter: function (event, player) {
+			return player.countCards('he') > 0;
+		},
+		check: function (event, player) {
+			return event.num >= 1;
+		},
+		content: async function (event, trigger, player) {
+			player.say('万龙甲在此，无人能伤你分毫！');
+			const result = await player.chooseCard('he', true, '弃置一张牌防止伤害').forResult();
+			if (!result.bool) return;
+			await player.discard(result.cards);
+			trigger.cancel();
+		},
+	},
+
+	// 共劫（限定技，一局一次）
+	wezy_gongjie: {
+		audio: "ext:搬山道士/audio/skill:4",
+		limited: true,
+		skillAnimation: true,
+		animationColor: 'water',
+		trigger: {
+			player: "dying",
+		},
+		filter: function (event, player) {
+			return player.hp <= 0;
+		},
+		forced: true,
+		content: async function (event, trigger, player) {
+			player.say('若天道不公，我们便一起逆天！');
+			await player.recover(player.maxHp);
+			await player.draw(player.maxHp);
+			player.awakenSkill('wezy_gongjie');
+
+			// 切换到合体头像
+			player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/nezha_aobing2.jpg');
+
+			// 切换背景音乐
+			const path = 'extension/搬山道士/audio/bm/gongjie.mp3';
+			ui.backgroundMusic.src = path;
+			ui.backgroundMusic.play();
+			ui.backgroundMusic.addEventListener('ended', function () {
+				ui.backgroundMusic.src = path;
+			});
+
+			// 移除所有技能（除了共劫）
+			const allSkills = player.getSkills();
+			for (let skill of allSkills) {
+				if (skill !== 'wezy_gongjie') {
+					player.removeSkill(skill);
+				}
+			}
+
+			const players = game.filterPlayer();
+			for (let p of players) {
+				if (p === player) continue;
+				const judge = await p.judge();
+				if (judge.suit === 'spade' && judge.number >= 2 && judge.number <= 9) {
+					await p.damage(3, 'thunder');
+				}
+			}
+		},
 	},
 
 };

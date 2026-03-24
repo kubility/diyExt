@@ -672,7 +672,10 @@ const skill = {
 			return event.target && get.distance(player, event.target) >= player.hp;
 		},
 		content: async function (event, trigger, player) {
-			trigger.directHit = true;
+			if (!trigger.directHit) {
+				trigger.directHit = [];
+			}
+			trigger.directHit.add(trigger.target);
 			player.line(trigger.target, 'green');
 		}
 	},
@@ -1058,7 +1061,10 @@ const skill = {
 		audio: "ext:搬山道士/audio/skill:3",
 		forced: true,
 		content: async function (event, trigger, player) {
-			trigger.directHit = true;
+			if (!trigger.directHit) {
+				trigger.directHit = [];
+			}
+			trigger.directHit.add(trigger.target);
 		},
 		group: ["yidao228_1"],
 		subSkill: {

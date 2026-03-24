@@ -47,6 +47,14 @@ const character = {
 		skills: ["打官司", "觉醒"],
 	},
 
+	// 哪吒&敖丙
+	wezy_nezha_aobing: {
+		sex: "male",
+		group: "qun",
+		hp: 4,
+		skills: ["wezy_mowan", "wezy_nitian", "wezy_lingzhu", "wezy_wanlongjia", "wezy_hunyuan", "wezy_gongjie"],
+	},
+
 
 };
 for (let i in character) {

@@ -553,7 +553,10 @@ const skill = {
 				return 8 - get.value(card);
 			}).forResult();
 			if (!result.bool) {
-				trigger.directHit = true;
+				if (!trigger.directHit) {
+					trigger.directHit = [];
+				}
+				trigger.directHit.add(target);
 			}
 		},
 	},

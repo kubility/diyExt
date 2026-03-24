@@ -1,7 +1,7 @@
 const translate = {
 	// 角色翻译
 	heiyiren: "黑衣人",
-	zhuanyelvshi: "专业律师",
+
 	guanlidashi: "管理大师",
 	yldb: "大宝",
 	"毒刘备":"毒刘备",

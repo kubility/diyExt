@@ -2,9 +2,7 @@ const translate = {
 	// 角色翻译
 	mabaoguo: "马保国",
 	lyg_jiefei: "超商劫匪",
-	qun_bujingyun: "步惊云",
-	qun_trump: "唐纳德·特朗普",
-	qun_leijun: "雷军",
+
 
 	// 技能翻译
 
