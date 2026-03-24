@@ -48,7 +48,7 @@ const character = {
 	},
 
 	// 哪吒&敖丙
-	wezy_nezha_aobing: {
+	nezha_aobing: {
 		sex: "male",
 		group: "qun",
 		hp: 4,

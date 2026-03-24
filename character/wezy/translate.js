@@ -6,7 +6,7 @@ const translate = {
 	qun_trump: "唐纳德·特朗普",
 	qun_leijun: "雷军",
 	zhuanyelvshi: "专业律师",
-	wezy_nezha_aobing: "哪吒&敖丙",
+	nezha_aobing: "哪吒&敖丙",
 
 	// 技能翻译
 
