@@ -600,10 +600,9 @@ const skill = {
 	// 步惊云 - 你不要过来啊！
 	qun_dont_come: {
 		audio: "ext:搬山道士/audio/skill:2",
-		trigger: { target: "useCardToBefore" },
+		trigger: { target: "useCardToTargeted" },
 		forced: true,
 		filter: function (event, trigger, player) {
-			if (!event.targets || !event.targets.includes(player)) return false;
 			if (trigger.player == player) return false;
 			return true;
 		},
@@ -1749,9 +1748,9 @@ const skill = {
 			const path = 'extension/搬山道士/audio/bm/gongjie.mp3';
 			ui.backgroundMusic.src = path;
 			ui.backgroundMusic.play();
-			ui.backgroundMusic.addEventListener('ended', function () {
-				ui.backgroundMusic.src = path;
-			});
+			//ui.backgroundMusic.addEventListener('ended', function () {
+			//	ui.backgroundMusic.src = path;
+			//});
 
 			// 移除所有技能（除了共劫）
 			const allSkills = player.getSkills();
