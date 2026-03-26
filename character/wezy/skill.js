@@ -603,8 +603,7 @@ const skill = {
 		trigger: { target: "useCardToTargeted" },
 		forced: true,
 		filter: function (event, trigger, player) {
-			if (trigger.player == player) return false;
-			return true;
+			return event.player != player && get.tag(event.card, "damage");
 		},
 		content: async function (event, trigger, player) {
 
@@ -782,7 +781,10 @@ const skill = {
 
 			} else if (suit === 'diamond') {
 				if (player.countCards('h') > 0) {
-					await player.discard(1);
+					const result = await player.chooseCard('h', true, '选择一张手牌弃置').forResult();
+					if (result.bool) {
+						await player.discard(result.cards);
+					}
 					player.say('绝世好剑，好剑啊！');
 				}
 			} else if (suit === 'spade') {
@@ -1120,7 +1122,7 @@ const skill = {
 		ai: {
 			expose: 0.3,
 		},
-		group: ['qun_youshang_clear'],
+		group: ['qun_youshang_clear', 'qun_youshang_distance'],
 		subSkill: {
 			clear: {
 				trigger: 'phaseBegin',
@@ -1135,6 +1137,16 @@ const skill = {
 						}
 					}
 					delete player.storage.qun_youshang_friend;
+				},
+			},
+			distance: {
+				mod: {
+					globalFrom: function (from, to, distance) {
+						if (from.hasSkill('qun_youshang') && to.hasMark('qun_youshang')) {
+							return 1;
+						}
+						return distance;
+					},
 				},
 			},
 		},
