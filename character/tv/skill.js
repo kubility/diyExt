@@ -63,8 +63,8 @@ const skill = {
 			return false;
 		},
 		content: function () {
-			trigger.player.addTempSkill('th_cibei_cancel');
 			trigger.cancel();
+			trigger.player.addTempSkill('th_cibei_cancel');
 			player.draw(5);
 		},
 		subSkill: {
@@ -434,9 +434,10 @@ const skill = {
 			return event.source && event.source.hp > player.hp && player.countGainableCards(event.source, 'he') >= 2;
 		},
 		content: async function (event, trigger, player) {
+			trigger.cancel();
 			await trigger.source.gainPlayerCard('he', player, 2, true);
 			trigger.source.line(player, 'green');
-			trigger.cancel();
+			
 		},
 		subSkill: {
 			ju: {
@@ -1002,10 +1003,10 @@ const skill = {
 					'step 1'
 					var cc = player.countCards('h');
 					if (result.bool) {
+						trigger.cancel();
 						player.logSkill("yingbian_1");
 						player.chooseToDiscard(player.countCards('h'), true);
 						player.draw(cc);
-						trigger.cancel();
 						player.changeZhuanhuanji('yingbian');
 
 
@@ -1027,11 +1028,11 @@ const skill = {
 					player.chooseBool(get.prompt("yingbian"), "是否发动“应变【阴】”，制衡所有手牌，免疫此次伤害")
 					'step 1'
 					if (result.bool) {
+						trigger.cancel();
 						var cc = player.countCards('h');
 						player.logSkill("yingbian_2");
 						player.chooseToDiscard(player.countCards('h'), true);
 						player.draw(cc);
-						trigger.cancel();
 						player.changeZhuanhuanji('yingbian');
 
 					}

@@ -55,6 +55,14 @@ const character = {
 		skills: ["wezy_mowan", "wezy_nitian", "wezy_lingzhu", "wezy_wanlongjia", "wezy_hunyuan", "wezy_gongjie"],
 	},
 
+	// 贾旭明
+	jiaxuming: {
+		sex: "male",
+		group: "qun",
+		hp: 3,
+		skills: ["jiaxuming_qiaobian", "jiaxuming_dougeng", "jiaxuming_waibao"],
+	},
+
 
 };
 for (let i in character) {

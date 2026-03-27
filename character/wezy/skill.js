@@ -1726,11 +1726,12 @@ const skill = {
 			return event.num >= 1;
 		},
 		content: async function (event, trigger, player) {
+			trigger.cancel();
 			player.say('万龙甲在此，无人能伤你分毫！');
 			const result = await player.chooseCard('he', true, '弃置一张牌防止伤害').forResult();
 			if (!result.bool) return;
 			await player.discard(result.cards);
-			trigger.cancel();
+
 		},
 	},
 
@@ -1780,6 +1781,161 @@ const skill = {
 					await p.damage(3, 'thunder');
 				}
 			}
+		},
+	},
+
+	// 贾旭明技能
+	// 巧辩
+	jiaxuming_qiaobian: {
+		audio: 2,
+		enable: "phaseUse",
+		usable: 1,
+		filter: function (event, player) {
+			return player.countCards('h') > 0;
+		},
+		filterTarget: function (card, player, target) {
+			return target !== player;
+		},
+		selectTarget: 1,
+		content: async function (event, trigger, player) {
+			const target = event.targets[0];
+			const cardResult = await player.chooseCard('h', true, '选择一张手牌').forResult();
+			if (!cardResult.bool) return;
+			const card = cardResult.cards[0];
+			const suit = get.suit(card);
+			const suitNames = ['spade', 'heart', 'club', 'diamond'];
+			const suitSymbols = ['♠', '♥', '♣', '♦'];
+			const guessResult = await target.chooseControl(suitSymbols)
+				.set('prompt', '据我所知，这里边儿有事儿啊！')
+				.set("ai", function () {
+					return suitSymbols.randomGet();
+				}).forResult();
+			target.popup(guessResult.control);
+			target.say(guessResult.control);
+			game.log(target, '猜测花色为', guessResult.control);
+			if (guessResult.control === suitSymbols[suitNames.indexOf(suit)]) {
+				await target.draw();
+			} else {
+				await target.damage(1, 'thunder');
+			}
+			await player.showCards(card);
+		},
+		ai: {
+			order: 9,
+			result: {
+				target: function (player, target) {
+					return -1;
+				},
+			},
+		},
+	},
+
+	// 抖梗
+	jiaxuming_dougeng: {
+		audio: 2,
+		trigger: {
+			target: 'useCardToTargeted',
+		},
+		filter: function (event, player) {
+			if (event.card.name === 'sha') return true;
+			if (get.color(event.card) === 'black' && get.type(event.card) === 'trick') return true;
+			return false;
+		},
+		check: function (event, player) {
+			return get.attitude(player, event.player) < 0;
+		},
+		content: async function (event, trigger, player) {
+			await player.draw();
+			//trigger.getParent().all_excluded = true;
+			//trigger.getParent().targets.length = 0;
+			//trigger.getParent().targets = trigger.getParent().targets.filter(target => target !== player);
+			trigger.getParent().targets.remove(player);
+
+		},
+		ai: {
+			effect: {
+				target: function (card, player, target) {
+					if (card.name === 'sha' || (get.color(card) === 'black' && get.type(card) === 'trick'))
+						return [1, 0.5];
+				},
+			},
+		},
+	},
+
+	// 歪报（觉醒技）
+	jiaxuming_waibao: {
+		audio: 2,
+		trigger: {
+			player: 'damageEnd',
+		},
+		filter: function (event, player) {
+			if (player.hasSkill('jiaxuming_xiabian')) return false;
+			return player.hp <= 1;
+		},
+		forced: true,
+		skillAnimation: true,
+		animationColor: 'gray',
+		content: async function (event, trigger, player) {
+			await player.awakenSkill('jiaxuming_waibao');
+			await player.gainMaxHp(1);
+			await player.recover(1);
+			await player.addSkills('jiaxuming_xiabian');
+		},
+		derivation: 'jiaxuming_xiabian',
+	},
+
+	// 瞎编（觉醒后获得）
+	jiaxuming_xiabian: {
+		audio: 2,
+		enable: 'phaseUse',
+		filter: function (event, player) {
+			return player.countCards('h', card => {
+				return get.type(card) !== 'basic';
+			}) > 0;
+		},
+		filterCard: function (card, player) {
+			return get.type(card) !== 'basic';
+		},
+		selectCard: 1,
+		position: 'h',
+		viewAs: {
+			name: 'wuzhong',
+		},
+		prompt: '将一张非基本牌当【无中生有】使用',
+		check: function (card) {
+			return 7 - get.value(card);
+		},
+		ai: {
+			order: 9,
+			result: {
+				player: function (player) {
+					return 1;
+				},
+			},
+		},
+		group: ['jiaxuming_xiabian_discard'],
+		subSkill: {
+			discard: {
+				trigger: {
+					player: 'useCardAfter',
+				},
+				filter: function (event, player) {
+					return event.card && event.card.name === 'wuzhong';
+				},
+				direct: true,
+				content: async function (event, trigger, player) {
+					const result = await player.chooseTarget('令一名角色弃置一张牌', function (card, player, target) {
+						return target.countCards('he') > 0;
+					}).forResult();
+					if (result.bool) {
+						const target = result.targets[0];
+						const discardResult = await target.chooseCard('he', true, '弃置一张牌').forResult();
+						if (discardResult.bool) {
+							await target.discard(discardResult.cards);
+						}
+					}
+				},
+			},
 		},
 	},
 

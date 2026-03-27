@@ -7,6 +7,7 @@ const translate = {
 	qun_leijun: "雷军",
 	zhuanyelvshi: "专业律师",
 	nezha_aobing: "哪吒&敖丙",
+	jiaxuming: "贾旭明",
 
 	// 技能翻译
 
@@ -100,6 +101,19 @@ const translate = {
 
 	wezy_gongjie: "共劫",
 	wezy_gongjie_info: "限定技，一局一次。当你进入濒死状态，回复满体力，摸体力上限的牌，并失去所有技能，全场判定，如果是黑桃2-9，受到无来源伤害的3点闪电伤害。",
+
+	// 贾旭明技能翻译
+	jiaxuming_qiaobian: "巧辩",
+	jiaxuming_qiaobian_info: "出牌阶段限一次，你可以展示一张手牌，令一名角色猜测此牌花色：1. 猜错：你对其造成1点伤害；2. 猜对：其摸一张牌。",
+
+	jiaxuming_dougeng: "抖梗",
+	jiaxuming_dougeng_info: "当你成为【杀】或黑色锦囊牌的目标时，你可以摸一张牌，然后令此牌对你无效。",
+
+	jiaxuming_waibao: "歪报",
+	jiaxuming_waibao_info: "觉醒技，准备阶段，若你已损失至少2点体力（体力≤1），你触发觉醒：体力上限+1，回复1点体力；获得技能【瞎编】。",
+
+	jiaxuming_xiabian: "瞎编",
+	jiaxuming_xiabian_info: "你可以将任意非基本牌当【无中生有】使用；且每当你使用【无中生有】后，可令一名角色弃置一张牌。",
 
 
 };
