@@ -39,7 +39,7 @@ const character = {
 		hp: 3,
 		skills: ["qun_ok", "qun_youshang", "qun_xingjiabi", "qun_chonggao", "qun_mifen", "qun_yindushenqu"],
 	},
-		// 专业律师
+	// 专业律师
 	zhuanyelvshi: {
 		sex: "male",
 		group: "qun",
@@ -61,6 +61,14 @@ const character = {
 		group: "qun",
 		hp: 3,
 		skills: ["jiaxuming_qiaobian", "jiaxuming_dougeng", "jiaxuming_waibao"],
+	},
+	
+	// 刘醒・梁非凡（双面武将）
+	wezy_liuliang: {
+		sex: "male",
+		group: "qun",
+		hp: 3,
+		skills: ["wezy_duihou", "wezy_yinggang", "wezy_dingzhuang", "wezy_shiya", "wezy_gezhi"],
 	},
 
 

@@ -115,6 +115,27 @@ const translate = {
 	jiaxuming_xiabian: "瞎编",
 	jiaxuming_xiabian_info: "你可以将任意非基本牌当【无中生有】使用；且每当你使用【无中生有】后，可令一名角色弃置一张牌。",
 
+	// 刘醒・梁非凡技能翻译
+	wezy_liuliang: "刘醒・梁非凡",
+
+	wezy_duihou: "对吼",
+	wezy_duihou_info: "转换技，出牌阶段限一次，你可以切换形态（醒态↔非态），并摸一张牌；若本轮未受到伤害，额外摸一张牌。",
+
+	wezy_yinggang: "硬刚",
+	wezy_yinggang_info: "醒态技，当你成为【杀】的目标时，你可以弃置一张牌，令该【杀】无效，并对使用者造成1点伤害。",
+
+	wezy_dingzhuang: "顶撞",
+	wezy_dingzhuang_info: "醒态技，你对体力值大于你的角色使用【杀】无距离限制，命中后摸一张牌。",
+
+	wezy_shiya: "施压",
+	wezy_shiya_info: "非态技，出牌阶段限一次，令一名角色选择：①交给你一张牌；②本回合不能使用【闪】。",
+
+	wezy_gezhi: "革职",
+	wezy_gezhi_info: "非态技，当你受到伤害时，你可以弃置两张牌，令伤害来源本回合技能失效。",
+
+	wezy_yeshi: "吔屎",
+	wezy_yeshi_info: "觉醒技，当你同一回合内完成形态切换且造成伤害时触发：体力上限+1，【杀】的伤害+1，且【杀】不可被响应。",
+
 
 };
 

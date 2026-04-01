@@ -883,7 +883,7 @@ const skill = {
 					player: "useSkill",
 				},
 				filter: function (event, player) {
-					return event.skill && !event.skill.includes('qun_moyin_disable');
+					return player.hasSkill('qun_moyin_disable');
 				},
 				content: async function (event, trigger, player) {
 					event.cancel();
@@ -1782,6 +1782,370 @@ const skill = {
 				}
 			}
 		},
+	},
+
+	// 刘醒・梁非凡技能（双面武将）
+	// 对吼（转换技 - 形态切换核心）
+	wezy_duihou: {
+		enable: 'phaseUse',
+		usable: 1,
+		content: async function (event, trigger, player) {
+			const currentForm = player.storage.wezy_duihou_form || 'xing';
+			const newForm = currentForm === 'xing' ? 'fei' : 'xing';
+
+			// 更新形态
+			player.storage.wezy_duihou_form = newForm;
+			player.storage.wezy_duihou_switched = true;
+
+			// 切换技能组
+			if (newForm === 'xing') {
+				player.removeSkill('wezy_shiya');
+				player.removeSkill('wezy_gezhi');
+				player.addSkill('wezy_yinggang');
+				player.addSkill('wezy_dingzhuang');
+				player.node.name.textContent = '刘醒';
+				player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/liuxing.jpg');
+				game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'wezy_duihou2');
+			} else {
+				player.removeSkill('wezy_yinggang');
+				player.removeSkill('wezy_dingzhuang');
+				player.addSkill('wezy_shiya');
+				player.addSkill('wezy_gezhi');
+				player.node.name.textContent = '梁非凡';
+				player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/liangfeifan.jpg');
+				game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'wezy_duihou1');
+			}
+
+			// 基础摸1牌
+			await player.draw(1);
+
+			// 若本轮未受到伤害，额外摸1牌
+			if (!player.storage.wezy_duihou_damaged) {
+				await player.draw(1);
+			}
+		},
+		ai: {
+			order: 1,
+			result: {
+				player: function (player) {
+					return 2;
+				},
+			},
+		},
+		// 子技能组：轮次重置、受伤追踪、觉醒检查
+		group: ['wezy_duihou_reset', 'wezy_duihou_damage', 'wezy_duihou_check'],
+		subSkill: {
+			// 每轮开始重置追踪标记
+			reset: {
+				trigger: { global: 'roundStart' },
+				forced: true,
+				popup: false,
+				charlotte: true,
+				content: async function (event, trigger, player) {
+					player.storage.wezy_duihou_damaged = false;
+					player.storage.wezy_duihou_switched = false;
+					player.storage.wezy_duihou_dealt = false;
+				},
+			},
+			// 受伤时标记
+			damage: {
+				trigger: { player: 'damageEnd' },
+				forced: true,
+				popup: false,
+				charlotte: true,
+				content: async function (event, trigger, player) {
+					player.storage.wezy_duihou_damaged = true;
+				},
+			},
+			// 造成伤害时检查觉醒条件
+			check: {
+				trigger: { source: 'damageEnd' },
+				forced: true,
+				popup: false,
+				charlotte: true,
+				filter: function (event, player) {
+					return !player.storage.wezy_yeshi_awakened;
+				},
+				content: async function (event, trigger, player) {
+					player.storage.wezy_duihou_dealt = true;
+					if (player.storage.wezy_duihou_switched && !player.storage.wezy_yeshi_awakened) {
+						player.addSkill('wezy_yeshi');
+					}
+				},
+			},
+		},
+		// 初始化：设置醒态为默认形态，移除非态技能
+		init: function (player) {
+			if (!player.storage.wezy_duihou_form) {
+				player.storage.wezy_duihou_form = 'xing';
+			}
+			player.storage.wezy_duihou_damaged = false;
+			player.storage.wezy_duihou_switched = false;
+			player.storage.wezy_duihou_dealt = false;
+			// 初始为醒态，移除非态技能
+			player.removeSkill('wezy_shiya');
+			player.removeSkill('wezy_gezhi');
+			// 设置初始头像和名字
+			setTimeout(function () {
+				player.node.name.textContent = '刘醒';
+				player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/liuxing.jpg');
+			}, 500);
+		},
+		onremove: function (player) {
+			delete player.storage.wezy_duihou_form;
+			delete player.storage.wezy_duihou_damaged;
+			delete player.storage.wezy_duihou_switched;
+			delete player.storage.wezy_duihou_dealt;
+		},
+	},
+
+	// 硬刚（醒态・刘醒 - 被动技）
+	wezy_yinggang: {
+		audio: 1,
+		trigger: { target: 'useCardToBefore' },
+		filter: function (event, player) {
+			return event.card && event.card.name === 'sha' && event.player !== player;
+		},
+		check: function (event, player) {
+			return player.countCards('he') > 0 && get.attitude(player, event.player) < 0;
+		},
+		content: async function (event, trigger, player) {
+			const result = await player.chooseCard('he', true, '硬刚：弃置一张牌，令该【杀】无效并对使用者造成1点伤害').forResult();
+			if (!result.bool) return;
+
+			await player.discard(result.cards);
+			trigger.cancel();
+
+			// 对杀的使用者造成1点伤害
+			if (trigger.player && trigger.player.isIn()) {
+				await trigger.player.damage(1);
+			}
+		},
+		ai: {
+			effect: {
+				target: function (card, player, target) {
+					if (card.name === 'sha' && target.countCards('he') > 0) {
+						return [0.3, -1];
+					}
+				},
+			},
+		},
+	},
+
+	// 顶撞（醒态・刘醒 - 锁定技）
+	wezy_dingzhuang: {
+		audio: 2,
+		mod: {
+			// 对体力值大于自己的角色使用杀无距离限制
+			targetInRange: function (card, player, target) {
+				if (card.name === 'sha' && target.hp > player.hp) return true;
+			},
+		},
+		ai: {
+			effect: {
+				target: function (card, player, target) {
+					if (card.name === 'sha' && target.hp > player.hp) {
+						return [1, 0.5];
+					}
+				},
+			},
+		},
+		// 杀命中后摸一张牌
+		group: ['wezy_dingzhuang_draw'],
+		subSkill: {
+			draw: {
+				trigger: { source: 'damageEnd' },
+				forced: true,
+				popup: false,
+				charlotte: true,
+				filter: function (event, player) {
+					return event.card && event.card.name === 'sha';
+				},
+				content: async function (event, trigger, player) {
+					const quotes = ['你凭什么这么对我！', '我唔服！'];
+					player.say(quotes.randomGet());
+					await player.draw(1);
+				},
+			},
+		},
+	},
+
+	// 施压（非态・梁非凡 - 主动技）
+	wezy_shiya: {
+		audio: 2,
+		enable: 'phaseUse',
+		usable: 1,
+		filterTarget: function (card, player, target) {
+			return target !== player;
+		},
+		selectTarget: 1,
+		content: async function (event, trigger, player) {
+			const target = event.targets[0];
+			const quotes = ['这份工，你还想不想要？', '听我话，冇走鸡！'];
+			player.say(quotes.randomGet());
+
+			// 根据目标是否有牌动态设置选项
+			const hasCards = target.countCards('he') > 0;
+			const choices = hasCards ? ['交给你一张牌', '本回合不能使用【闪】'] : ['本回合不能使用【闪】'];
+			const result = await target.chooseControl(choices)
+				.set('prompt', '施压：请选择一项').forResult();
+
+			if (result.control === '交给你一张牌') {
+				await player.gainPlayerCard(target, 'he', true);
+			} else {
+				target.addTempSkill('wezy_shiya_noshan', { player: 'phaseEnd' });
+				target.markSkill('wezy_shiya_noshan');
+			}
+		},
+		ai: {
+			order: 6,
+			result: {
+				target: function (player, target) {
+					if (target.countCards('he') > 0) return -1;
+					return -0.5;
+				},
+				player: function (player, target) {
+					return 1;
+				},
+			},
+		},
+		subSkill: {
+			noshan: {
+				charlotte: true,
+				mark: true,
+				marktext: '压',
+				intro: {
+					content: '本回合不能使用或打出【闪】',
+				},
+				mod: {
+					cardEnabled: function (card, player) {
+						if (card.name === 'shan') return false;
+					},
+					cardRespondable: function (card, player) {
+						if (card.name === 'shan') return false;
+					},
+				},
+			},
+		},
+	},
+
+	// 革职（非态・梁非凡 - 被动技）
+	wezy_gezhi: {
+		audio: 2,
+		trigger: { player: 'damageBegin3' },
+		filter: function (event, player) {
+			return event.source && event.source.isIn() && player.countCards('he') >= 2;
+		},
+		check: function (event, player) {
+			return event.num >= 1 && get.attitude(player, event.source) < 0;
+		},
+		content: async function (event, trigger, player) {
+			const result = await player.chooseCard('he', 2, true, '革职：弃置两张牌，令伤害来源本回合技能失效').forResult();
+			if (!result.bool) return;
+
+			await player.discard(result.cards);
+
+			// 令伤害来源本回合技能失效
+			trigger.source.addTempSkill('wezy_gezhi_silent', { player: 'phaseEnd' });
+			trigger.source.markSkill('wezy_gezhi_silent');
+		},
+		ai: {
+			effect: {
+				target: function (card, player, target) {
+					if (target.countCards('he') >= 2) {
+						return [0.5, -1];
+					}
+				},
+			},
+		},
+		subSkill: {
+			silent: {
+				charlotte: true,
+				mark: true,
+				marktext: '革',
+				intro: {
+					content: '本回合技能失效',
+				},
+				trigger: {
+					player: 'useSkill',
+				},
+				forced: true,
+				content: async function (event, trigger, player) {
+					event.cancel();
+				},
+			},
+		},
+	},
+
+	// 吔屎（觉醒技）
+	wezy_yeshi: {
+		audio: 2,
+		skillAnimation: true,
+		animationColor: 'fire',
+		trigger: { player: 'phaseEnd' },
+		forced: true,
+		filter: function (event, player) {
+			return player.storage.wezy_duihou_switched
+				&& player.storage.wezy_duihou_dealt
+				&& !player.storage.wezy_yeshi_awakened;
+		},
+		content: async function (event, trigger, player) {
+			const quotes = ['你再讲一次？！', '吔屎啦梁非凡！'];
+			player.say(quotes.randomGet());
+			// 体力上限+1
+			await player.gainMaxHp(1);
+			player.awakenSkill('wezy_yeshi');
+			player.storage.wezy_yeshi_awakened = true;
+		},
+		ai: {
+			effect: {
+				target: function (card, player, target) {
+					if (target.storage.wezy_duihou_switched && target.storage.wezy_duihou_dealt) {
+						return [1, 2];
+					}
+				},
+			},
+		},
+		subSkill: {
+			buff: {
+				charlotte: true,
+				mark: true,
+				marktext: '吼',
+				intro: {
+					content: '【杀】伤害+1，且【杀】不可被响应',
+				},
+				// 杀不可被响应（强制命中）
+				trigger: { player: 'useCard1' },
+				filter: function (event, player) {
+					return event.card && event.card.name === 'sha';
+				},
+				forced: true,
+				content: async function (event, trigger, player) {
+					trigger.directHit = trigger.directHit || [];
+					for (const target of trigger.targets) {
+						trigger.directHit.add(target);
+					}
+				},
+				mod: {
+					// 杀不可被救出
+					cardSavable: function (card, player) {
+						if (card.name === 'sha') return false;
+					},
+				},
+			},
+			damage: {
+				charlotte: true,
+				trigger: { source: 'damageBegin' },
+				filter: function (event, player) {
+					return event.card && event.card.name === 'sha';
+				},
+				forced: true,
+				content: async function (event, trigger, player) {
+					trigger.num++;
+				},
+			},
+		},
+		group: ['wezy_yeshi_damage', 'wezy_yeshi_buff'],
 	},
 
 	// 贾旭明技能
