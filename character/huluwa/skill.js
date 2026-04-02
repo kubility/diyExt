@@ -3,7 +3,7 @@ import { lib, game, ui, get, ai, _status } from "../../main/utils.js";
 /** @type { importCharacterConfig['skill'] } */
 const skill = {
     // 大娃技能
-    libashanhe: {
+    hlw_libashanhe: {
         audio: 2,
         enable: 'phaseUse',
         usable: 1,
@@ -33,7 +33,7 @@ const skill = {
             }
         }
     },
-    jurentai: {
+    hlw_jurentai: {
         audio: 2,
         trigger: { player: 'damageBegin' },
         content: async function (event, trigger, player) {
@@ -69,7 +69,7 @@ const skill = {
         }
     },
     // 二娃技能
-    qianliyan: {
+    hlw_qianliyan: {
         audio: 2,
         trigger: { player: 'phaseBegin' },
         content: async function (event, trigger, player) {
@@ -100,7 +100,7 @@ const skill = {
             await game.cardsGotoPile(otherCards);
             game.log(player, '选择了' + get.translation(xj) + '作为先机牌');
         },
-        group: ['qianliyan_clean', 'qianliyan_draw'],
+        group: ['hlw_qianliyan_clean', 'hlw_qianliyan_draw'],
         subSkill: {
             clean: {
                 trigger: { player: 'phaseEnd' },
@@ -130,7 +130,7 @@ const skill = {
             }
         }
     },
-    shunfenger: {
+    hlw_shunfenger: {
         audio: 2,
         trigger: { global: 'phaseBegin' },
         filter: function (event, player) {
@@ -177,7 +177,7 @@ const skill = {
         }
     },
     // 三娃技能
-    gangjintiegu: {
+    hlw_gangjintiegu: {
         audio: 2,
         lock: true,
         trigger: { player: 'damageBegin' },
@@ -209,7 +209,7 @@ const skill = {
             }
         }
     },
-    jinzhongzhao: {
+    hlw_jinzhongzhao: {
         audio: 2,
         trigger: { player: 'damageBegin' },
         filter: function (event, player) {
@@ -250,7 +250,7 @@ const skill = {
         }
     },
     // 四娃技能
-    liehuo: {
+    hlw_liehuo: {
         audio: 2,
         enable: 'phaseUse',
         filter: function (event, player) {
@@ -281,7 +281,7 @@ const skill = {
             // 标记技能已成功使用
             player.storage.liehuo_used = true;
         },
-        group: ['liehuo_clear'],
+        group: ['hlw_liehuo_clear'],
         subSkill: {
             clear: {
                 trigger: { player: 'phaseEnd' },
@@ -303,7 +303,7 @@ const skill = {
             }
         }
     },
-    fenshao: {
+    hlw_fenshao: {
         audio: 2,
         trigger: { player: 'shaDamage' },
         filter: function (event, player) {
@@ -339,7 +339,7 @@ const skill = {
     },
 
     // 五娃技能
-    ganlu: {
+    hlw_ganlu: {
         audio: 2,
         enable: 'phaseUse',
         filter: function (event, player) {
@@ -370,7 +370,7 @@ const skill = {
             // 标记技能已成功使用
             player.storage.ganlu_used = true;
         },
-        group: ['ganlu_clear'],
+        group: ['hlw_ganlu_clear'],
         subSkill: {
             clear: {
                 trigger: { player: 'phaseEnd' },
@@ -392,7 +392,7 @@ const skill = {
             }
         }
     },
-    shuidun: {
+    hlw_shuidun: {
         audio: 2,
         trigger: { player: 'damageBegin' },
         content: async function (event, trigger, player) {
@@ -430,7 +430,7 @@ const skill = {
     },
 
     // 六娃技能
-    yinshen: {
+    hlw_yinshen: {
         audio: 2,
         trigger: { player: 'phaseEnd' },
         filter: function (event, player) {
@@ -445,7 +445,7 @@ const skill = {
                 await player.discard(allEquips);
             }
             // 添加临时技能，持续到下一个回合开始
-            player.addTempSkill('yinshen_effect', { player: 'phaseBegin' });
+            player.addTempSkill('hlw_yinshen_effect', { player: 'phaseBegin' });
         },
         ai: {
             order: 8,
@@ -454,7 +454,7 @@ const skill = {
             }
         }
     },
-    yinshen_effect: {
+    hlw_yinshen_effect: {
         mark: true,
         marktext: '隐',
         charlotte: true,
@@ -473,7 +473,7 @@ const skill = {
         }
     },
     // 七娃技能
-    shouyao: {
+    hlw_shouyao: {
         audio: 2,
         enable: 'phaseUse',
         filter: function (event, player) {
@@ -505,7 +505,7 @@ const skill = {
             // 标记技能已成功使用
             player.storage.shouyao_used = true;
         },
-        group: ['shouyao_clear'],
+        group: ['hlw_shouyao_clear'],
         subSkill: {
             clear: {
                 trigger: { player: 'phaseEnd' },
@@ -526,7 +526,7 @@ const skill = {
             }
         }
     },
-    baohulu: {
+    hlw_baohulu: {
         audio: 2,
         enable: 'phaseUse',
         filter: function (event, player) {
@@ -579,7 +579,7 @@ const skill = {
             // 标记技能已成功使用
             player.storage.baohulu_used = true;
         },
-        group: ['baohulu_clear'],
+        group: ['hlw_baohulu_clear'],
         subSkill: {
             clear: {
                 trigger: { player: 'phaseEnd' },
@@ -598,7 +598,7 @@ const skill = {
     },
     // ==================== 金刚葫芦妹技能 ====================
 
-    xiongmeitongxin: {
+    hlw_xiongmeitongxin: {
         audio: 2,
         trigger: { global: 'damageBegin' },
         filter: function (event, player) {
@@ -644,7 +644,7 @@ const skill = {
         }
     },
 
-    qicaihulu: {
+    hlw_qicaihulu: {
         audio: 2,
         trigger: { player: 'phaseUseBegin' },
         filter: function (event, player) {
@@ -702,7 +702,7 @@ const skill = {
                     break;
                 case 5: // 六娃之力
                     // 本回合不能成为其他角色使用牌的目标
-                    player.addTempSkill('yinshen_effect', { player: 'phaseBegin' });
+                    player.addTempSkill('hlw_yinshen_effect', { player: 'phaseBegin' });
                     break;
                 case 6: // 七娃之力
                     const targets6 = await player.chooseTarget('获得一名角色一张牌并令其翻面', true).forResult();
@@ -725,7 +725,7 @@ const skill = {
     },
 
     // ==================== 葫芦小金刚技能 ====================
-    qixinguiyi: {
+    hlw_qixinguiyi: {
         audio: 2,
         trigger: { player: 'phaseBegin' },
         forced: true,
@@ -738,13 +738,13 @@ const skill = {
             }
 
             const skills = [
-                'libashanhe',      // 大娃：力拔山河 (索引 0)
-                'qianliyan',         // 二娃：洞察 (索引 1)
-                'gangjintiegu',    // 三娃：钢铁骨 (索引 2)
-                'liehuo',          // 四娃：烈火 (索引 3)
-                'ganlu',           // 五娃：甘露 (索引 4)
-                'yinshen',         // 六娃：隐身 (索引 5)
-                'shouyao'          // 七娃：收妖 (索引 6)
+                'hlw_libashanhe',      // 大娃：力拔山河 (索引 0)
+                'hlw_qianliyan',         // 二娃：洞察 (索引 1)
+                'hlw_gangjintiegu',    // 三娃：钢铁骨 (索引 2)
+                'hlw_liehuo',          // 四娃：烈火 (索引 3)
+                'hlw_ganlu',           // 五娃：甘露 (索引 4)
+                'hlw_yinshen',         // 六娃：隐身 (索引 5)
+                'hlw_shouyao'          // 七娃：收妖 (索引 6)
             ];
             for (let i = 0; i < player.maxHp; i++) {
                 if (!player.hasSkill(skills[i])) {
@@ -756,7 +756,7 @@ const skill = {
         ai: { order: 10 }
     },
 
-    huluzhenhun: {
+    hlw_huluzhenhun: {
         audio: 2,
         trigger: { player: 'phaseBegin' },
         filter: function (event, player) {
@@ -775,14 +775,14 @@ const skill = {
             for (const other of others) {
                 await other.damage(2, 'unreal', 'nohujia');
             }
-            player.addSkill('wudishenqu');
-            player.awakenSkill('huluzhenhun');
+            player.addSkill('hlw_wudishenqu');
+            player.awakenSkill('hlw_huluzhenhun');
             player.insertPhase();
         },
         ai: { order: 10 }
     },
 
-    wudishenqu: {
+    hlw_wudishenqu: {
         audio: 2,
         trigger: { player: 'damageBegin' },
         lock: true,
@@ -799,7 +799,7 @@ const skill = {
                 return Math.floor(player.hp / 2);
             }
         },
-        group: ['wudishenqu_cost'],
+        group: ['hlw_wudishenqu_cost'],
         subSkill: {
             cost: {
                 trigger: { player: 'phaseEnd' },
@@ -833,7 +833,7 @@ const skill = {
     },
 
     // ==================== 老爷子技能 ====================
-    feifu: {
+    hlw_feifu: {
         audio: "ext:搬山道士/audio/skill:1",
         trigger: { global: "phaseBegin" },
         filter: function (event, player) {
@@ -847,7 +847,7 @@ const skill = {
                 'poison': '毒', 'kami': '神', 'stab': '刺'
             };
 
-            player.logSkill('feifu', target);
+            player.logSkill('hlw_feifu', target);
             player.chat('吃我一记' + natureNames[selectedAxe] + '斧！');
 
             const suits = ['club', 'heart', 'diamond', 'spade'];
@@ -868,7 +868,7 @@ const skill = {
             }
         }
     },
-    laoDangYiZhuang: {
+    hlw_laoDangYiZhuang: {
         audio: 2,
         trigger: { player: 'judgeEnd' },
         filter: function (event, player) {
