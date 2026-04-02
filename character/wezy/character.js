@@ -71,6 +71,14 @@ const character = {
 		skills: ["wezy_duihou", "wezy_yinggang", "wezy_dingzhuang", "wezy_shiya", "wezy_gezhi"],
 	},
 
+	// 雪山救狐
+	wezy_xueshanjiuhu: {
+		sex: "female",
+		group: "yao",
+		hp: 3,
+		skills: ["wezy_kuishi", "wezy_chongsheng"],
+	},
+
 
 };
 for (let i in character) {

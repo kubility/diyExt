@@ -66,6 +66,11 @@ export async function precontent(config, pack) {
 
 	// 加载万恶之源分组
 	if (lib.config.extension_搬山道士_wezy) {
+		// 添加妖势力
+		lib.group.push('yao');
+		lib.translate.yao = '妖';
+		lib.translate.yaoColor = '#FF00FF';
+		lib.groupnature.yao = 'thunder';
 		await loadPack("wezy", "万恶之源", ["character"]);
 		console.log("万恶之源分组加载完成");
 	}

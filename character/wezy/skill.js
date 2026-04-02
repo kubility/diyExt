@@ -2303,6 +2303,303 @@ const skill = {
 		},
 	},
 
+	// 雪山救狐技能
+	// 馈食
+	wezy_kuishi: {
+		enable: 'phaseUse',
+		usable: 1,
+		filterTarget: function (card, player, target) {
+			return target !== player && target.countCards('he') > 0;
+		},
+		selectTarget: 1,
+		content: async function (event, trigger, player) {
+			const target = event.targets[0];
+			target.say('给你一只酱板鸭,希望你能熬过冬天');
+			game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'wezy_kuishi');
+			// 目标选择一张牌交给玩家
+			const result = await target.chooseCard('he', true, '馈食：选择一张牌置于雪山救狐武将牌上').forResult();
+			if (!result.bool) return;
+
+			// 将牌置于武将牌上，视为"鸭"
+			const card = result.cards[0];
+			await target.give(card, player);
+			// 使用addToExpansion将牌置于武将牌上
+			await player.addToExpansion(card, player, 'giveAuto').gaintag.add("wezy_kuishi");
+			player.markSkill('wezy_kuishi');
+			// 记录馈食者
+			player.storage.wezy_kuishi_target = target.playerid;
+			// 切换目标武将图片为ai_saonian
+			player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/wezy_xueshanjiuhu.jpg');
+			target.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/ai_saonian.jpg');
+		},
+		ai: {
+			order: 7,
+			result: {
+				target: function (player, target) {
+					return -1;
+				},
+				player: function (player, target) {
+					return 2;
+				},
+			},
+		},
+		marktext: '鸭',
+		intro: {
+			content: 'expansion',
+			mark: function (dialog, content, player) {
+				dialog.addText('鸭（雪山救狐的标记）');
+				const cards = player.getExpansions('wezy_kuishi');
+				if (cards && cards.length) {
+					dialog.add(cards);
+				}
+			},
+		},
+		onremove: function (player, skill) {
+			const cards = player.getExpansions(skill);
+			if (cards && cards.length) {
+				player.loseToDiscardpile(cards);
+			}
+		},
+		// 回合结束后如果有鸭，添加登门技能；检测目标死亡
+		group: ['wezy_kuishi_addDengmen', 'wezy_kuishi_checkDeath'],
+		subSkill: {
+			addDengmen: {
+				trigger: { player: 'phaseEnd' },
+				filter: function (event, player) {
+					return player.getExpansions('wezy_kuishi').length > 0 && !player.hasSkill('wezy_dengmen');
+				},
+				forced: true,
+				popup: false,
+				content: async function (event, trigger, player) {
+					player.addSkill('wezy_dengmen');
+					// 获得1点护甲
+					if (player.hujia <= 0) {
+						await player.changeHujia(1);
+					}
+				},
+			},
+			// 检测馈食者死亡
+			checkDeath: {
+				trigger: { global: 'dieAfter' },
+				filter: function (event, player) {
+					return player.getExpansions('wezy_kuishi').length > 0 && player.storage.wezy_kuishi_target === event.player.playerid;
+				},
+				forced: true,
+				popup: false,
+				content: async function (event, trigger, player) {
+					// 馈食者死亡，重置鸭
+					await player.loseToDiscardpile(player.getExpansions('wezy_kuishi'));
+					player.unmarkSkill('wezy_kuishi');
+					player.setAvatar(player.name, player.name);
+					// 如果有登门技能，移除并失去护甲
+					if (player.hasSkill('wezy_dengmen')) {
+						player.removeSkill('wezy_dengmen');
+					}
+					// 恢复死亡目标的原本头像（event.player就是刚死亡的目标）
+					if (event.player && event.player.node && event.player.node.avatar) {
+						event.player.setAvatar(event.player.name, event.player.name);
+					}
+					delete player.storage.wezy_kuishi_target;
+
+				},
+			},
+		},
+	},
+
+	// 登门
+	wezy_dengmen: {
+		audio: 2,
+		locked: true,
+		frequent: true,
+		trigger: { player: 'phaseBegin' },
+		filter: function (event, player) {
+			return player.getExpansions('wezy_kuishi').length > 0 && player.storage.wezy_kuishi_target;
+		},
+		content: async function (event, trigger, player) {
+			// 通过ID获取目标玩家对象
+			const targetId = player.storage.wezy_kuishi_target;
+			const target = game.findPlayer(p => p.playerid === targetId);
+			// 展示目标手牌
+			await player.viewCards('鸭', target.getCards('h'));
+
+			// ===== 诘问逻辑开始 =====
+			player.say('你可曾在雪山上，救过一只狐狸？');
+			game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'wezy_dengmen');
+			await game.delay(3); // 延迟3秒
+			// 四个猜测选项
+			const choices = [
+				'你是那只狐狸',
+				'你是那只酱板鸭',
+				'你是雪山',
+				'你是我刚刚劈的木柴'
+			];
+
+			// 随机决定正确答案（0-3）
+			const correctAnswer = Math.floor(Math.random() * 4);
+
+			const result = await target.chooseControl(choices)
+				.set('prompt', '你可曾在雪山上，救过一只狐狸？')
+				.set('ai', function () {
+					// AI选择策略：完全随机，让AI也猜不透
+					const choices = _status.event.controls;
+					return choices.randomGet();
+				})
+				.forResult();
+
+			const selectedIndex = choices.indexOf(result.control);
+			const isCorrect = selectedIndex === correctAnswer;
+
+			// 根据猜测切换玩家图片并执行效果
+			const avatarMap = ['ai_huli', 'ai_jiangbanya', 'ai_xueshan', 'ai_muchai'];
+			switch (selectedIndex) {
+				case 0: // 你是那只狐狸
+					game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_baihu');
+					await game.delay(3); // 延迟3秒
+					if (isCorrect) {
+						player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/' + avatarMap[0] + '.jpg');
+						game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_baihu2');
+						if (target.hp < target.maxHp) {
+							await target.recover(1);
+						} else {
+							await target.draw(3);
+						}
+					} else {
+						player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/' + avatarMap[1] + '.jpg');
+						game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_jiangbanya');
+						await target.damage(2, 'fire');
+						await player.draw(3);
+					}
+					break;
+
+				case 1: // 你是那只酱板鸭
+					game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_jiangbanya0');
+					await game.delay(3); // 延迟3秒
+					if (isCorrect) {
+						player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/' + avatarMap[1] + '.jpg');
+						// 获得玩家所有装备牌，自身护甲+1
+						game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_jiangbanya');
+						const equips = player.getCards('e');
+						if (equips.length > 0) {
+							await target.gain(equips, player, 'give');
+						}
+						await target.changeHujia(1);
+					} else {
+						// 弃置其2张手牌，并对其造成一点伤害
+						player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/' + avatarMap[0] + '.jpg');
+						game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_baihu2');
+						if (target.countCards('he') > 1) {
+							await target.discard(target.getCards('he').randomGets(Math.min(2, target.countCards('he'))));
+						} else {
+							await target.discard(target.getCards('he'));
+						}
+						await target.damage(1);
+					}
+					break;
+
+				case 2: // 你是雪山
+					game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_xueshan0');
+					await game.delay(3); // 延迟3秒
+					if (isCorrect) {
+						player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/' + avatarMap[2] + '.jpg');
+						player.say('我就是那座雪山！');
+						game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_xueshan');
+						player.turnOver();
+						if (!player.isLinked()) {
+							player.link();
+						}
+					} else {
+						// 其弃置所有的基本牌
+						player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/' + avatarMap[3] + '.jpg');
+						game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_muchai');
+						const basicCards = target.getCards('h', card => get.type(card) === 'basic');
+						if (basicCards.length > 0) {
+							await target.discard(basicCards);
+						}
+					}
+					break;
+
+				case 3: // 你是我刚刚劈的木柴
+					game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_muchai0');
+					await game.delay(3); // 延迟3秒
+					if (isCorrect) {
+						// 跳过所有阶段，直接进入弃牌阶段
+						player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/' + avatarMap[3] + '.jpg');
+						game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_muchai');
+						player.say('你猜对了，但...');
+						player.skipPhase('phaseJudge');
+						player.skipPhase('phaseDraw');
+						player.skipPhase('phaseUse');
+					} else {
+						// 回复1点体力，并立即获得一个额外的回合
+						player.node.avatar.setBackgroundImage('extension/搬山道士/image/character/wezy/' + avatarMap[1] + '.jpg');
+						game.playAudio('..', 'extension', '搬山道士', 'audio', 'skill', 'ai_jiangbanya');
+						await player.recover(1);
+						player.insertPhase();
+						player.say('你猜错了！');
+					}
+					break;
+			}
+
+			// ===== 诘问逻辑结束 =====
+
+			// 重置鸭标记
+			const yaCards = player.getExpansions('wezy_kuishi');
+			if (yaCards.length > 0) {
+				await player.loseToDiscardpile(yaCards);
+			}
+			player.unmarkSkill('wezy_kuishi');
+			delete player.storage.wezy_kuishi_target;
+
+			// 失去1点护甲（移除登门效果）
+			if (player.hujia > 0) {
+				await player.changeHujia(-1);
+			}
+
+			// 移除登门技能
+			player.removeSkill('wezy_dengmen');
+			// 恢复目标原本头像
+			if (target) {
+				target.setAvatar(target.name, target.name);
+			}
+		},
+	},
+
+	// 重生
+	wezy_chongsheng: {
+		audio: 2,
+		trigger: { player: 'dying' },
+		filter: function (event, player) {
+			return player.getExpansions('wezy_kuishi').length > 0;
+		},
+		content: async function (event, trigger, player) {
+			// 弃置所有鸭
+			const yaCards = player.getExpansions('wezy_kuishi');
+			if (yaCards.length > 0) {
+				await player.loseToDiscardpile(yaCards);
+			}
+			player.unmarkSkill('wezy_kuishi');
+			// 记录目标ID用于恢复头像
+			const targetId = player.storage.wezy_kuishi_target;
+			if (targetId) {
+				const target = game.findPlayer(p => p.playerid === targetId);
+				if (target) {
+					target.setAvatar(target.name, target.name);
+				}
+			}
+			delete player.storage.wezy_kuishi_target;
+			// 移除登门技能（如果有）
+			if (player.hasSkill('wezy_dengmen')) {
+				if (player.hujia > 0) {
+					await player.changeHujia(-1);
+				}
+				player.removeSkill('wezy_dengmen');
+			}
+			// 回复体力到1点
+			await player.recover(1 - player.hp);
+			player.say('以鸭之名，重获新生！');
+		},
+	},
+
 };
 
 export default skill;
